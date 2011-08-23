@@ -3,22 +3,26 @@
 /* PCL version string */
 #define PCL_VERSION "1.1.0"
 
-#define HAVE_TBB 0
-
-#define HAVE_OPENNI 0
-
 #define HAVE_QHULL 1
 
-#define HAVE_WXWIDGETS 0
-
-#define HAVE_CUDA 0
-
-#ifdef DISABLE_OPENNI
+#ifdef HAVE_OPENNI
 #undef HAVE_OPENNI
 #endif
 
-#ifdef DISABLE_QHULL
-#undef HAVE_QHULL
+#ifdef HAVE_OPENNI
+#undef HAVE_OPENNI
+#endif
+
+#ifdef HAVE_WXWIDGETS
+#undef HAVE_WXWIDGETS
+#endif
+
+#ifdef HAVE_CUDA
+#undef HAVE_CUDA
+#endif
+
+#ifdef DISABLE_OPENNI
+#undef HAVE_OPENNI
 #endif
 
 #ifdef DISABLE_WXWIDGETS

@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: simplification_remove_unused_vertices.cpp 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: simplification_remove_unused_vertices.cpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 

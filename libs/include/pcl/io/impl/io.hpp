@@ -1,7 +1,9 @@
 /*
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2009, Willow Garage, Inc.
+ *  Point Cloud Library (PCL) - www.pointclouds.org
+ *  Copyright (c) 2010-2011, Willow Garage, Inc.
+ *
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,7 +33,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: io.hpp 1524 2011-07-01 01:01:43Z rusu $
+ * $Id: io.hpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -42,7 +44,9 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 template <typename PointT> int
-pcl::getFieldIndex (const pcl::PointCloud<PointT> &cloud, const std::string &field_name, std::vector<sensor_msgs::PointField> &fields)
+pcl::getFieldIndex (const pcl::PointCloud<PointT> &cloud, 
+                    const std::string &field_name, 
+                    std::vector<sensor_msgs::PointField> &fields)
 {
   fields.clear ();
   // Get the fields list
@@ -83,8 +87,8 @@ pcl::copyPointCloud (const pcl::PointCloud<PointInT> &cloud_in, pcl::PointCloud<
   // Allocate enough space and copy the basics
   cloud_out.points.resize (cloud_in.points.size ());
   cloud_out.header   = cloud_in.header;
-  cloud_out.width    = cloud_in.points.size ();
-  cloud_out.height   = 1;
+  cloud_out.width    = cloud_in.width;
+  cloud_out.height   = cloud_in.height;
   cloud_out.is_dense = cloud_in.is_dense;
   // Copy all the data fields from the input cloud to the output one
   typedef typename pcl::traits::fieldList<PointInT>::type FieldListInT;

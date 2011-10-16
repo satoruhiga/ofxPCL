@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: pcl_base.cpp 1376 2011-06-19 03:01:22Z rusu $
+ * $Id: pcl_base.cpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -131,7 +131,7 @@ pcl::PCLBase<sensor_msgs::PointCloud2>::initCompute ()
     }
     catch (std::bad_alloc)
     {
-      PCL_ERROR ("[initCompute] Failed to allocate %zu indices.\n", input_->width * input_->height);
+      PCL_ERROR ("[initCompute] Failed to allocate %lu indices.\n", (unsigned long) (input_->width * input_->height));
     }
     for (size_t i = 0; i < indices_->size (); ++i) { (*indices_)[i] = i; }
   }

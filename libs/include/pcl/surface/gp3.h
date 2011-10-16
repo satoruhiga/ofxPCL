@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: gp3.h 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: gp3.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -46,7 +46,7 @@
 #include <pcl/PolygonMesh.h>
 #include <boost/function.hpp>
 
-#include "pcl/io/io.h"
+#include "pcl/common/io.h"
 #include <fstream>
 #include <iostream>
 
@@ -223,7 +223,7 @@ namespace pcl
         *       by avoiding connecting points from one side to points from the other through forcing the use of the edge points.
         */
       inline void 
-      setMaximumSurfaceAgle (double eps_angle) { eps_angle_ = eps_angle; }
+      setMaximumSurfaceAngle (double eps_angle) { eps_angle_ = eps_angle; }
 
       /** \brief Get the maximum surface angle. */
       inline double 
@@ -435,7 +435,8 @@ namespace pcl
         fringe_queue_.push_back(v);
       }
 
-      /** \brief Function for ascending sort of nnAngle 
+      /** \brief Function for ascending sort of nnAngle, taking visibility into account
+        * (angles to visible neighbors will be first, to the invisible ones after).
         * \param a1 the first angle
         * \param a2 the second angle
         */

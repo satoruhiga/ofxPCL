@@ -31,14 +31,15 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: vtk_io.cpp 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: vtk_io.cpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
+#include <pcl/point_types.h>
 #include <pcl/io/vtk_io.h>
 #include <fstream>
 #include <iostream>
-#include <pcl/io/io.h>
+#include <pcl/common/io.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 int
@@ -99,9 +100,13 @@ pcl::io::saveVTKFile (const std::string &file_name,
     fs << "1 " << i << std::endl;
 
   // Write polygons
-  // note: Double check the second parameter!
-  fs << "\nPOLYGONS " << triangles.polygons.size () << " " << (triangles.polygons[0].vertices.size () + 1) * triangles.polygons.size () << std::endl;
-  for (size_t i = 0; i < triangles.polygons.size (); ++i)
+  // compute the correct number of values:
+  size_t triangle_size = triangles.polygons.size ();
+  int correct_number = triangle_size;
+  for (size_t i = 0; i < triangle_size; ++i)
+    correct_number += triangles.polygons[i].vertices.size ();
+  fs << "\nPOLYGONS " << triangle_size << " " << correct_number << std::endl;
+  for (size_t i = 0; i < triangle_size; ++i)
   {
     fs << triangles.polygons[i].vertices.size () << " ";
     size_t j = 0;
@@ -123,12 +128,11 @@ pcl::io::saveVTKFile (const std::string &file_name,
       int c = 0;
       if (triangles.cloud.fields[field_index].datatype == sensor_msgs::PointField::FLOAT32)
       {
-        float value;
-        memcpy (&value, &triangles.cloud.data[i * point_size + triangles.cloud.fields[field_index].offset + c * sizeof (float)], sizeof (float));
-        int color = *reinterpret_cast<const int*>(&(value));
-        int r = (0xff0000 & color) >> 16;
-        int g = (0x00ff00 & color) >> 8;
-        int b =  0x0000ff & color;
+        pcl::RGB color;
+        memcpy (&color, &triangles.cloud.data[i * point_size + triangles.cloud.fields[field_index].offset + c * sizeof (float)], sizeof (RGB));
+        int r = color.r;
+        int g = color.g;
+        int b = color.b;
         fs << (float)r/255.0 << " " << (float)g/255.0 << " " << (float)b/255.0;
       }
       fs << std::endl;

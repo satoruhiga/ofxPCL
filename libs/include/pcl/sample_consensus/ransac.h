@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: ransac.h 1632 2011-07-08 16:36:36Z nizar $
+ * $Id: ransac.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 

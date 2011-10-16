@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: segment_differences.hpp 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: segment_differences.hpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -40,6 +40,8 @@
 
 #include "pcl/segmentation/segment_differences.h"
 #include "pcl/common/concatenate.h"
+#include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/kdtree/organized_data.h>
 
 //////////////////////////////////////////////////////////////////////////
 template <typename PointT> void
@@ -113,7 +115,13 @@ pcl::SegmentDifferences<PointT>::segment (PointCloud &output)
   }
 
   // Initialize the spatial locator
-  initTree (spatial_locator_, tree_);
+  if (!tree_)
+  {
+    if (target_->isOrganized ())
+      tree_.reset (new pcl::OrganizedDataIndex<PointT> ());
+    else
+      tree_.reset (new pcl::KdTreeFLANN<PointT> (false));
+  }
   // Send the input dataset to the spatial locator
   tree_->setInputCloud (target_);
 

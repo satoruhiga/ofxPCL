@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: pcl_base.h 1376 2011-06-19 03:01:22Z rusu $
+ * $Id: pcl_base.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 #ifndef PCL_PCL_BASE_H_
@@ -167,7 +167,7 @@ namespace pcl
           {
             PCL_ERROR ("[initCompute] Failed to allocate %lu indices.\n", (unsigned long)input_->points.size ());
           }
-          for (size_t i = 0; i < indices_->size (); ++i) { (*indices_)[i] = i; }
+          for (size_t i = 0; i < indices_->size (); ++i) { (*indices_)[i] = (int) i; }
         }
 
         // If we have a set of fake indices, but they do not match the number of points in the cloud, update them
@@ -175,7 +175,7 @@ namespace pcl
         {
           size_t indices_size = indices_->size ();
           indices_->resize (input_->points.size ());
-          for (size_t i = indices_size; i < indices_->size (); ++i) { (*indices_)[i] = i; }
+          for (size_t i = indices_size; i < indices_->size (); ++i) { (*indices_)[i] = (int) i; }
         }
 
         return (true);

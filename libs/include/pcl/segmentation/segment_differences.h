@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: segment_differences.h 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: segment_differences.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -88,7 +88,7 @@ namespace pcl
 
       /** \brief Empty constructor. */
       SegmentDifferences () : 
-        tree_ (), target_ (), spatial_locator_ (0), distance_threshold_ (0)
+        tree_ (), target_ (), distance_threshold_ (0)
       {};
 
       /** \brief Provide a pointer to the target dataset against which we
@@ -145,13 +145,6 @@ namespace pcl
 
       /** \brief The input target point cloud dataset. */
       PointCloudConstPtr target_;
-
-      /** \brief Parameter for the spatial locator tree. By convention, the values represent:
-        * 0: ANN (Approximate Nearest Neigbor library) kd-tree
-        * 1: FLANN (Fast Library for Approximate Nearest Neighbors) kd-tree
-        * 2: Organized spatial dataset index
-        */
-      int spatial_locator_;
 
       /** \brief The distance tolerance (squared) as a measure in the L2
         * Euclidean space between corresponding points. 

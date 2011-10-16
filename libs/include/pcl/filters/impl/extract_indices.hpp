@@ -31,14 +31,14 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: extract_indices.hpp 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: extract_indices.hpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
 #ifndef PCL_FILTERS_IMPL_EXTRACT_INDICES_H_
 #define PCL_FILTERS_IMPL_EXTRACT_INDICES_H_
 
-#include "pcl/io/io.h"
+#include "pcl/common/io.h"
 #include "pcl/filters/extract_indices.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,15 +59,15 @@ pcl::ExtractIndices<PointT>::applyFilter (PointCloud &output)
   if (indices_->size () == (input_->width * input_->height) ||
       indices_->size () == input_->points.size ())
   {
-    // If negative, then we need to return all points
+    // If negative, then return an empty cloud
     if (negative_)
-      output = *input_;
-    // else, return an empty cloud 
-    else
     {
       output.width = output.height = 0;
       output.points.clear ();
     }
+    // else, we need to return all points
+    else
+      output = *input_;
     return;
   }
 
@@ -87,14 +87,10 @@ pcl::ExtractIndices<PointT>::applyFilter (PointCloud &output)
     set_difference (all_indices.begin (), all_indices.end (), indices.begin (), indices.end (),
                     inserter (remaining_indices, remaining_indices.begin ()));
 
-    output.points.resize (remaining_indices.size ());
     copyPointCloud (*input_, remaining_indices, output);
   }
   else
-  {
-    output.points.resize (indices_->size ());
     copyPointCloud (*input_, *indices_, output);
-  }
 }
 
 #define PCL_INSTANTIATE_ExtractIndices(T) template class PCL_EXPORTS pcl::ExtractIndices<T>;

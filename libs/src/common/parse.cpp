@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: parse.cpp 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: parse.cpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -240,6 +240,52 @@ pcl::console::parse_3x_arguments (int argc, char** argv, const char* str, int &f
       f = atoi (values.at (0).c_str ());
       s = atoi (values.at (1).c_str ());
       t = atoi (values.at (2).c_str ());
+      return (i - 1);
+    }
+  }
+  return (-1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+int
+pcl::console::parse_x_arguments (int argc, char** argv, const char* str, std::vector<double>& v, bool debug)
+{
+  for (int i = 1; i < argc; ++i)
+  {
+    // Search for the string
+    if ((strcmp (argv[i], str) == 0) && (++i < argc))
+    {
+      // look for ',' as a separator
+      std::vector<std::string> values;
+      boost::split (values, argv[i], boost::is_any_of (","), boost::token_compress_on);
+
+      v.resize (values.size ());
+      for (size_t j = 0; j < v.size (); ++j)
+        v[j] = atof (values.at (j).c_str ());
+
+      return (i - 1);
+    }
+  }
+  return (-1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+int
+pcl::console::parse_x_arguments (int argc, char** argv, const char* str, std::vector<int>& v, bool debug)
+{
+  for (int i = 1; i < argc; ++i)
+  {
+    // Search for the string
+    if ((strcmp (argv[i], str) == 0) && (++i < argc))
+    {
+      // look for ',' as a separator
+      std::vector<std::string> values;
+      boost::split (values, argv[i], boost::is_any_of (","), boost::token_compress_on);
+
+      v.resize (values.size ());
+      for (size_t j = 0; j < v.size (); ++j)
+        v[j] = atoi (values.at (j).c_str ());
+
       return (i - 1);
     }
   }

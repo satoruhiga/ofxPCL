@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: transformation_from_correspondences.hpp 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: transformation_from_correspondences.hpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 #include <Eigen/SVD> 
@@ -40,13 +40,13 @@
 
 namespace pcl {
 
-inline 
+inline // added by ofxPCL
 TransformationFromCorrespondences::TransformationFromCorrespondences ()
 {
   reset();
 }
 
-inline 
+inline // added by ofxPCL
 TransformationFromCorrespondences::~TransformationFromCorrespondences ()
 {
 }

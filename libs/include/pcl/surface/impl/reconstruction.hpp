@@ -31,12 +31,14 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: reconstruction.hpp 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: reconstruction.hpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
 #ifndef PCL_SURFACE_RECONSTRUCTION_IMPL_H_
 #define PCL_SURFACE_RECONSTRUCTION_IMPL_H_
+#include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/kdtree/organized_data.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 template <typename PointInT> void
@@ -58,11 +60,10 @@ pcl::SurfaceReconstruction<PointInT>::reconstruct (pcl::PolygonMesh &output)
   {
     if (!tree_)
     {
-      PCL_ERROR ("[pcl::%s::compute] No spatial search method was given!\n", getClassName ().c_str ());
-      output.cloud.width = output.cloud.height = 0;
-      output.cloud.data.clear ();
-      output.polygons.clear ();
-      return;
+      if (input_->isOrganized ())
+        tree_.reset (new pcl::OrganizedDataIndex<PointInT> ());
+      else
+        tree_.reset (new pcl::KdTreeFLANN<PointInT> (false));
     }
 
     // Send the surface dataset to the spatial locator

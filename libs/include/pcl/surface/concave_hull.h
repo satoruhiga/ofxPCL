@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: concave_hull.h 1527 2011-07-01 01:18:48Z rusu $
+ * $Id: concave_hull.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -64,7 +64,7 @@ namespace pcl
       typedef typename PointCloud::ConstPtr PointCloudConstPtr;
 
       /** \brief Empty constructor. */
-      ConcaveHull () : keep_information_ (false), voronoi_centers_ ()
+      ConcaveHull () : alpha_ (0), keep_information_ (false), voronoi_centers_ ()
       {
       };
 
@@ -87,7 +87,7 @@ namespace pcl
       /** \brief Set the alpha value, which limits the size of the resultant
         * hull segments (the smaller the more detailed the hull).  
         *
-        * \param alpha  positive, non-zero value, defining the maximum length
+        * \param alpha positive, non-zero value, defining the maximum length
         * from a vertex to the facet center (center of the voronoi cell).
         */
       inline void

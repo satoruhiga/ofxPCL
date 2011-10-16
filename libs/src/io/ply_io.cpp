@@ -43,9 +43,10 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
-#include "pcl/io/io.h"
+#include "pcl/common/io.h"
 #include "pcl/io/ply_io.h"
 #include "pcl/io/ply.h"
+#include <pcl/point_types.h>
 
 int
 pcl::PLYReader::readHeader (const std::string &file_name, sensor_msgs::PointCloud2 &cloud,

@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: filter.hpp 1805 2011-07-15 17:15:55Z rusu $
+ * $Id: filter.hpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 

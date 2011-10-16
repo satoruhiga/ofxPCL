@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: fpfh.h 1747 2011-07-13 21:55:45Z mdixon $
+ * $Id: fpfh.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -83,7 +83,7 @@ namespace pcl
       typedef typename Feature<PointInT, PointOutT>::PointCloudOut PointCloudOut;
 
       /** \brief Empty constructor. */
-      FPFHEstimation () : nr_bins_f1_ (11), nr_bins_f2_ (11), nr_bins_f3_ (11), d_pi_ (1.0 / (2.0 * M_PI))
+      FPFHEstimation () : nr_bins_f1_ (11), nr_bins_f2_ (11), nr_bins_f3_ (11), d_pi_ ((float)(1.0 / (2.0 * M_PI)))
       {
         feature_name_ = "FPFHEstimation";
       };
@@ -110,6 +110,7 @@ namespace pcl
         * \param cloud the dataset containing the XYZ Cartesian coordinates of the two points
         * \param normals the dataset containing the surface normals at each point in \a cloud
         * \param p_idx the index of the query point (source)
+        * \param row the index of row in SPFH histograms (destination)
         * \param indices the k-neighborhood point indices in the dataset
         * \param hist_f1 the resultant SPFH histogram for feature f1
         * \param hist_f2 the resultant SPFH histogram for feature f2
@@ -117,7 +118,7 @@ namespace pcl
         */
       void 
       computePointSPFHSignature (const pcl::PointCloud<PointInT> &cloud, 
-                                 const pcl::PointCloud<PointNT> &normals, int p_idx, 
+                                 const pcl::PointCloud<PointNT> &normals, int p_idx, int row, 
                                  const std::vector<int> &indices, 
                                  Eigen::MatrixXf &hist_f1, Eigen::MatrixXf &hist_f2, Eigen::MatrixXf &hist_f3);
 

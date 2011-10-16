@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: parse.h 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: parse.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 #ifndef TERMINAL_TOOLS_PARSE_H_
@@ -182,6 +182,28 @@ namespace pcl
       */
     PCL_EXPORTS int 
     parse_3x_arguments (int argc, char** argv, const char* str, int &f, int &s, int &t, bool debug = true);
+
+    /** \brief Parse for specific given command line arguments (3x values comma 
+      * separated). Returns the values sent as doubles.
+      * \param argc the number of command line arguments
+      * \param argv the command line arguments
+      * \param str the command line argument to search for
+      * \param v the vector into which the parsed values will be copied
+      * \param debug whether to print debug info or not
+      */
+    PCL_EXPORTS int 
+    parse_x_arguments (int argc, char** argv, const char* str, std::vector<double>& v, bool debug = true);
+
+    /** \brief Parse for specific given command line arguments (N values comma 
+      * separated). Returns the values sent as ints.
+      * \param argc the number of command line arguments
+      * \param argv the command line arguments
+      * \param str the command line argument to search for
+      * \param v the vector into which the parsed values will be copied
+      * \param debug whether to print debug info or not
+      */
+    PCL_EXPORTS int 
+    parse_x_arguments (int argc, char** argv, const char* str, std::vector<int>& v, bool debug = true);
 
     /** \brief Parse for specific given command line arguments (multiple occurances 
       * of the same command line parameter). Returns the values sent as a vector.

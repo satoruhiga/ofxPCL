@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: extract_indices.cpp 1523 2011-07-01 00:56:33Z rusu $
+ * $Id: extract_indices.cpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -44,7 +44,7 @@
 void
 pcl::ExtractIndices<sensor_msgs::PointCloud2>::applyFilter (PointCloud2 &output)
 {
-  if (indices_->empty ())
+  if (indices_->empty () || (input_->width * input_->height == 0))
   {
     output.width = output.height = 0;
     output.data.clear ();
@@ -55,7 +55,15 @@ pcl::ExtractIndices<sensor_msgs::PointCloud2>::applyFilter (PointCloud2 &output)
   }
   if (indices_->size () == (input_->width * input_->height))
   {
-    output = *input_;
+    // If negative, then return an empty cloud
+    if (negative_)
+    {
+      output.width = output.height = 0;
+      output.data.clear ();
+    }
+    // else, we need to return all points
+    else
+      output = *input_;
     return;
   }
 

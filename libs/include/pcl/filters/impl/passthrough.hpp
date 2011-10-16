@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: passthrough.hpp 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: passthrough.hpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -39,7 +39,7 @@
 #define PCL_FILTERS_IMPL_PASSTHROUGH_H_
 
 #include "pcl/filters/passthrough.h"
-#include "pcl/io/io.h"
+#include "pcl/common/io.h"
 
 //////////////////////////////////////////////////////////////////////////
 template <typename PointT> void

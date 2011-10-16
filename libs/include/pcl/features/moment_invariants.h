@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: moment_invariants.h 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: moment_invariants.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 

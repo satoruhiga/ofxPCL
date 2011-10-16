@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: pcd_io.cpp 1780 2011-07-15 00:04:48Z mdixon $
+ * $Id: pcd_io.cpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -40,7 +40,7 @@
 #include <string>
 #include <stdlib.h>
 #include <boost/algorithm/string.hpp>
-#include "pcl/io/io.h"
+#include "pcl/common/io.h"
 #include "pcl/io/pcd_io.h"
 
 #include <boost/filesystem.hpp>

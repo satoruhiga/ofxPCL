@@ -31,14 +31,14 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: conditional_removal.hpp 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: conditional_removal.hpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
 #ifndef PCL_FILTER_IMPL_FIELD_VAL_CONDITION_H_
 #define PCL_FILTER_IMPL_FIELD_VAL_CONDITION_H_
 
-#include <pcl/io/io.h>
+#include <pcl/common/io.h>
 #include <boost/shared_ptr.hpp>
 #include <vector>
 
@@ -551,7 +551,7 @@ pcl::ConditionalRemoval<PointT>::applyFilter (PointCloud &output)
   int nr_p = 0;
   int nr_removed_p = 0;
 
-  if (keep_organized_)
+  if (!keep_organized_)
   {
     for (size_t cp = 0; cp < input_->points.size (); ++cp)
     {

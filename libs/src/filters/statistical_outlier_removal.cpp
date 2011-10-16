@@ -31,15 +31,17 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: statistical_outlier_removal.cpp 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: statistical_outlier_removal.cpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
-#include "pcl/impl/instantiate.hpp"
-#include "pcl/point_types.h"
+#include <pcl/impl/instantiate.hpp>
+#include <pcl/point_types.h>
 #include "pcl/filters/statistical_outlier_removal.h"
 #include "pcl/filters/impl/statistical_outlier_removal.hpp"
-#include "pcl/ros/conversions.h"
+#include <pcl/ros/conversions.h>
+#include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/kdtree/organized_data.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 void
@@ -62,16 +64,19 @@ pcl::StatisticalOutlierRemoval<sensor_msgs::PointCloud2>::applyFilter (PointClou
     output.data.clear ();
     return;
   }
-
-  // Initialize the spatial locator
-  //initTree (spatial_locator_type_, tree_, k_);
-
-  // TODO: fix this
-  tree_.reset (new pcl::KdTreeFLANN<pcl::PointXYZ>);
-
   // Send the input dataset to the spatial locator
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
   pcl::fromROSMsg (*input_, *cloud);
+
+  // Initialize the spatial locator
+  if (!tree_)
+  {
+    if (cloud->isOrganized ())
+      tree_.reset (new pcl::OrganizedDataIndex<pcl::PointXYZ> ());
+    else
+      tree_.reset (new pcl::KdTreeFLANN<pcl::PointXYZ> (false));
+  }
+
   tree_->setInputCloud (cloud);
 
   // Allocate enough space to hold the results

@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: sac_model_registration.hpp 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: sac_model_registration.hpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -39,51 +39,34 @@
 #define PCL_SAMPLE_CONSENSUS_IMPL_SAC_MODEL_REGISTRATION_H_
 
 #include "pcl/sample_consensus/sac_model_registration.h"
-#include "pcl/common/rigid_transforms.h"
 
 //////////////////////////////////////////////////////////////////////////
 template <typename PointT> bool
-pcl::SampleConsensusModelRegistration<PointT>::isSampleGood(const std::vector<int> &samples) const
+pcl::SampleConsensusModelRegistration<PointT>::isSampleGood (const std::vector<int> &samples) const
 {
-  Eigen::Array4f p1p0, p2p0, p2p1;
-
-  // Get the values at the points
-  pcl::Array4fMapConst p0 = input_->points[samples[0]].getArray4fMap();
-  pcl::Array4fMapConst p1 = input_->points[samples[1]].getArray4fMap();
-  pcl::Array4fMapConst p2 = input_->points[samples[2]].getArray4fMap();
-
-  // Compute the segment values (in 3d) between p1 and p0
-  p1p0 = p1 - p0;
-  p2p0 = p2 - p0;
-  p2p1 = p2 - p1;
-  return ((p1p0.matrix().squaredNorm() > sample_dist_thresh_) && (p2p0.matrix().squaredNorm() > sample_dist_thresh_)
-        && (p2p1.matrix().squaredNorm() > sample_dist_thresh_));
+  return ((input_->points[samples[1]].getArray4fMap () - input_->points[samples[0]].getArray4fMap ()).matrix ().squaredNorm () > sample_dist_thresh_ && 
+          (input_->points[samples[2]].getArray4fMap () - input_->points[samples[0]].getArray4fMap ()).matrix ().squaredNorm () > sample_dist_thresh_ && 
+          (input_->points[samples[2]].getArray4fMap () - input_->points[samples[1]].getArray4fMap ()).matrix ().squaredNorm () > sample_dist_thresh_);
 }
 
 //////////////////////////////////////////////////////////////////////////
 template <typename PointT> bool
 pcl::SampleConsensusModelRegistration<PointT>::computeModelCoefficients (const std::vector<int> &samples, Eigen::VectorXf &model_coefficients)
 {
+  if (!target_)
+  {
+    PCL_ERROR ("[pcl::SampleConsensusModelRegistration::computeModelCoefficients] No target dataset given!\n");
+    return (false);
+  }
   // Need 3 samples
   if (samples.size () != 3)
     return (false);
 
-  std::vector<int> indices_src (3);
   std::vector<int> indices_tgt (3);
   for (int i = 0; i < 3; ++i)
-  {
-    indices_src[i] = samples[i];
-    indices_tgt[i] = original_index_mapping_[samples[i]];
-  }
+    indices_tgt[i] = correspondences_[samples[i]];
 
-  Eigen::Matrix4f transform;
-  estimateRigidTransformationSVD<PointT, PointT> (*input_, indices_src, *target_, indices_tgt, transform);
-  model_coefficients.resize (16);
-  model_coefficients.segment<4>(0)  = transform.row (0);
-  model_coefficients.segment<4>(4)  = transform.row (1);
-  model_coefficients.segment<4>(8)  = transform.row (2);
-  model_coefficients.segment<4>(12) = transform.row (3);
-
+  estimateRigidTransformationSVD (*input_, samples, *target_, indices_tgt, model_coefficients);
   return (true);
 }
 
@@ -95,6 +78,11 @@ pcl::SampleConsensusModelRegistration<PointT>::getDistancesToModel (const Eigen:
   {
     PCL_ERROR ("[pcl::SampleConsensusModelRegistration::getDistancesToModel] Number of source indices (%lu) differs than number of target indices (%lu)!\n", (unsigned long)indices_->size (), (unsigned long)indices_tgt_->size ());
     distances.clear ();
+    return;
+  }
+  if (!target_)
+  {
+    PCL_ERROR ("[pcl::SampleConsensusModelRegistration::getDistanceToModel] No target dataset given!\n");
     return;
   }
   // Check if the model is valid given the user constraints
@@ -114,8 +102,11 @@ pcl::SampleConsensusModelRegistration<PointT>::getDistancesToModel (const Eigen:
 
   for (size_t i = 0; i < indices_->size (); ++i)
   {
-    Vector4fMapConst pt_src = input_->points[(*indices_)[i]].getVector4fMap ();
-    Vector4fMapConst pt_tgt = target_->points[(*indices_tgt_)[i]].getVector4fMap ();
+    Eigen::Vector4f pt_src = input_->points[(*indices_)[i]].getVector4fMap ();
+    pt_src[3] = 1;
+    Eigen::Vector4f pt_tgt = target_->points[(*indices_tgt_)[i]].getVector4fMap ();
+    pt_tgt[3] = 1;
+
     Eigen::Vector4f p_tr = transform * pt_src;
     // Calculate the distance from the transformed point to its correspondence
     // need to compute the real norm here to keep MSAC and friends general
@@ -125,12 +116,17 @@ pcl::SampleConsensusModelRegistration<PointT>::getDistancesToModel (const Eigen:
 
 //////////////////////////////////////////////////////////////////////////
 template <typename PointT> void
-pcl::SampleConsensusModelRegistration<PointT>::selectWithinDistance (const Eigen::VectorXf &model_coefficients, double threshold, std::vector<int> &inliers) 
+pcl::SampleConsensusModelRegistration<PointT>::selectWithinDistance (const Eigen::VectorXf &model_coefficients, const double threshold, std::vector<int> &inliers) 
 {
   if (indices_->size () != indices_tgt_->size ())
   {
     PCL_ERROR ("[pcl::SampleConsensusModelRegistration::selectWithinDistance] Number of source indices (%lu) differs than number of target indices (%lu)!\n", (unsigned long)indices_->size (), (unsigned long)indices_tgt_->size ());
     inliers.clear ();
+    return;
+  }
+  if (!target_)
+  {
+    PCL_ERROR ("[pcl::SampleConsensusModelRegistration::selectWithinDistance] No target dataset given!\n");
     return;
   }
 
@@ -154,14 +150,61 @@ pcl::SampleConsensusModelRegistration<PointT>::selectWithinDistance (const Eigen
   int nr_p = 0; 
   for (size_t i = 0; i < indices_->size (); ++i)
   {
-    Vector4fMapConst pt_src = input_->points[(*indices_)[i]].getVector4fMap ();
-    Vector4fMapConst pt_tgt = target_->points[(*indices_tgt_)[i]].getVector4fMap ();
+    Eigen::Vector4f pt_src = input_->points[(*indices_)[i]].getVector4fMap ();
+    pt_src[3] = 1;
+    Eigen::Vector4f pt_tgt = target_->points[(*indices_tgt_)[i]].getVector4fMap ();
+    pt_tgt[3] = 1;
+
     Eigen::Vector4f p_tr  = transform * pt_src;
     // Calculate the distance from the transformed point to its correspondence
     if ((p_tr - pt_tgt).squaredNorm () < thresh)
       inliers[nr_p++] = (*indices_)[i];
   }
   inliers.resize (nr_p);
+} 
+
+//////////////////////////////////////////////////////////////////////////
+template <typename PointT> int
+pcl::SampleConsensusModelRegistration<PointT>::countWithinDistance (
+    const Eigen::VectorXf &model_coefficients, const double threshold)
+{
+  if (indices_->size () != indices_tgt_->size ())
+  {
+    PCL_ERROR ("[pcl::SampleConsensusModelRegistration::countWithinDistance] Number of source indices (%lu) differs than number of target indices (%lu)!\n", (unsigned long)indices_->size (), (unsigned long)indices_tgt_->size ());
+    return (0);
+  }
+  if (!target_)
+  {
+    PCL_ERROR ("[pcl::SampleConsensusModelRegistration::countWithinDistance] No target dataset given!\n");
+    return (0);
+  }
+
+  double thresh = threshold * threshold;
+
+  // Check if the model is valid given the user constraints
+  if (!isModelValid (model_coefficients))
+    return (0);
+  
+  Eigen::Matrix4f transform;
+  transform.row (0) = model_coefficients.segment<4>(0);
+  transform.row (1) = model_coefficients.segment<4>(4);
+  transform.row (2) = model_coefficients.segment<4>(8);
+  transform.row (3) = model_coefficients.segment<4>(12);
+
+  int nr_p = 0; 
+  for (size_t i = 0; i < indices_->size (); ++i)
+  {
+    Eigen::Vector4f pt_src = input_->points[(*indices_)[i]].getVector4fMap ();
+    pt_src[3] = 1;
+    Eigen::Vector4f pt_tgt = target_->points[(*indices_tgt_)[i]].getVector4fMap ();
+    pt_tgt[3] = 1;
+
+    Eigen::Vector4f p_tr  = transform * pt_src;
+    // Calculate the distance from the transformed point to its correspondence
+    if ((p_tr - pt_tgt).squaredNorm () < thresh)
+      nr_p++;
+  }
+  return (nr_p);
 } 
 
 //////////////////////////////////////////////////////////////////////////
@@ -176,7 +219,7 @@ pcl::SampleConsensusModelRegistration<PointT>::optimizeModelCoefficients (const 
   }
 
   // Check if the model is valid given the user constraints
-  if (!isModelValid (model_coefficients))
+  if (!isModelValid (model_coefficients) || !target_)
   {
     optimized_coefficients = model_coefficients;
     return;
@@ -191,13 +234,55 @@ pcl::SampleConsensusModelRegistration<PointT>::optimizeModelCoefficients (const 
     indices_tgt[i] = (*indices_tgt_)[inliers[i]];
   }
 
-  Eigen::Matrix4f transform;
-  estimateRigidTransformationSVD<PointT, PointT> (*input_, indices_src, *target_, indices_tgt, transform);
-  optimized_coefficients.resize (16);
-  optimized_coefficients.segment<4>(0)  = transform.row (0);
-  optimized_coefficients.segment<4>(4)  = transform.row (1);
-  optimized_coefficients.segment<4>(8)  = transform.row (2);
-  optimized_coefficients.segment<4>(12) = transform.row (3);
+  estimateRigidTransformationSVD (*input_, indices_src, *target_, indices_tgt, optimized_coefficients);
+}
+
+//////////////////////////////////////////////////////////////////////////
+template <typename PointT> void
+pcl::SampleConsensusModelRegistration<PointT>::estimateRigidTransformationSVD (
+    const pcl::PointCloud<PointT> &cloud_src, 
+    const std::vector<int> &indices_src, 
+    const pcl::PointCloud<PointT> &cloud_tgt,
+    const std::vector<int> &indices_tgt, 
+    Eigen::VectorXf &transform)
+{
+  transform.resize (16);
+  Eigen::Vector4f centroid_src, centroid_tgt;
+  // Estimate the centroids of source, target
+  compute3DCentroid (cloud_src, indices_src, centroid_src);
+  compute3DCentroid (cloud_tgt, indices_tgt, centroid_tgt);
+
+  // Subtract the centroids from source, target
+  Eigen::MatrixXf cloud_src_demean;
+  demeanPointCloud (cloud_src, indices_src, centroid_src, cloud_src_demean);
+
+  Eigen::MatrixXf cloud_tgt_demean;
+  demeanPointCloud (cloud_tgt, indices_tgt, centroid_tgt, cloud_tgt_demean);
+
+  // Assemble the correlation matrix H = source * target'
+  Eigen::Matrix3f H = (cloud_src_demean * cloud_tgt_demean.transpose ()).topLeftCorner<3, 3>();
+
+  // Compute the Singular Value Decomposition
+  Eigen::JacobiSVD<Eigen::Matrix3f> svd (H, Eigen::ComputeFullU | Eigen::ComputeFullV);
+  Eigen::Matrix3f u = svd.matrixU ();
+  Eigen::Matrix3f v = svd.matrixV ();
+
+  // Compute R = V * U'
+  if (u.determinant () * v.determinant () < 0)
+  {
+    for (int x = 0; x < 3; ++x)
+      v (x, 2) *= -1;
+  }
+
+  Eigen::Matrix3f R = v * u.transpose ();
+
+  // Return the correct transformation
+  transform.segment<3> (0) = R.row (0); transform[12]  = 0;
+  transform.segment<3> (4) = R.row (1); transform[13]  = 0;
+  transform.segment<3> (8) = R.row (2); transform[14] = 0;
+
+  Eigen::Vector3f t = centroid_tgt.head<3> () - R * centroid_src.head<3> ();
+  transform[3] = t[0]; transform[7] = t[1]; transform[11] = t[2]; transform[15] = 1.0;
 }
 
 #define PCL_INSTANTIATE_SampleConsensusModelRegistration(T) template class PCL_EXPORTS pcl::SampleConsensusModelRegistration<T>;

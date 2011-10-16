@@ -1,7 +1,9 @@
 /*
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2009, Willow Garage, Inc.
+ *  Point Cloud Library (PCL) - www.pointclouds.org
+ *  Copyright (c) 2010-2011, Willow Garage, Inc.
+ *  
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,7 +33,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: boundary.h 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: boundary.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -43,19 +45,6 @@
 
 namespace pcl
 {
-  /** \brief Compute the angle in the [ 0, 2*PI ) interval of a point (direction) with a reference (0, 0) in 2D.
-    * \param point a 2D point
-    */
-  inline float 
-  getAngle2D (const float point[2])
-  {
-    float rad = atan2(point[1], point[0]);
-    if (rad < 0)
-      rad += 2 * M_PI;
-    return (rad);
-  }
-
-  ////////////////////////////////////////////////////////////////////////////////////////////
   /** \brief @b BoundaryEstimation estimates whether a set of points is lying on surface boundaries using an angle
     * criterion. The code makes use of the estimated surface normals at each point in the input dataset.
     *
@@ -73,6 +62,8 @@ namespace pcl
       using Feature<PointInT, PointOutT>::input_;
       using Feature<PointInT, PointOutT>::indices_;
       using Feature<PointInT, PointOutT>::k_;
+      using Feature<PointInT, PointOutT>::tree_;
+      using Feature<PointInT, PointOutT>::search_radius_;
       using Feature<PointInT, PointOutT>::search_parameter_;
       using Feature<PointInT, PointOutT>::surface_;
       using FeatureFromNormals<PointInT, PointNT, PointOutT>::normals_;
@@ -86,65 +77,80 @@ namespace pcl
         feature_name_ = "BoundaryEstimation";
       };
 
-      /** \brief Get a u-v-n coordinate system that lies on a plane defined by its normal
-        * \param p_coeff the plane coefficients (containing the plane normal)
-        * \param u the resultant u direction
-        * \param v the resultant v direction
-        */
-      inline void 
-      getCoordinateSystemOnPlane (const PointNT &p_coeff, 
-                                  Eigen::Vector3f &u, Eigen::Vector3f &v)
-      {
-        pcl::Vector3fMapConst p_coeff_v = p_coeff.getNormalVector3fMap ();
-        v = p_coeff_v.unitOrthogonal ();
-        u = p_coeff_v.cross (v);
-      }
-
-      /** \brief Check whether a point is a boundary point in a planar patch of projected points given by indices.
+     /** \brief Check whether a point is a boundary point in a planar patch of projected points given by indices.
         * \note A coordinate system u-v-n must be computed a-priori using \a getCoordinateSystemOnPlane
-        * \param cloud a pointer to the input point cloud
-        * \param q_idx the index of the query point in \a cloud
-        * \param indices the estimated point neighbors of the query point
-        * \param u the u direction
-        * \param v the v direction
-        * \param angle_threshold the threshold angle (default \f$\pi / 2.0\f$)
+        * \param[in] cloud a pointer to the input point cloud
+        * \param[in] q_idx the index of the query point in \a cloud
+        * \param[in] indices the estimated point neighbors of the query point
+        * \param[in] u the u direction
+        * \param[in] v the v direction
+        * \param[in] angle_threshold the threshold angle (default \f$\pi / 2.0\f$)
         */
       bool 
       isBoundaryPoint (const pcl::PointCloud<PointInT> &cloud, 
                        int q_idx, const std::vector<int> &indices, 
-                       const Eigen::Vector3f &u, const Eigen::Vector3f &v, float angle_threshold);
+                       const Eigen::Vector4f &u, const Eigen::Vector4f &v, const float angle_threshold);
 
       /** \brief Check whether a point is a boundary point in a planar patch of projected points given by indices.
         * \note A coordinate system u-v-n must be computed a-priori using \a getCoordinateSystemOnPlane
-        * \param cloud a pointer to the input point cloud
-        * \param q_point a pointer to the querry point
-        * \param indices the estimated point neighbors of the query point
-        * \param u the u direction
-        * \param v the v direction
-        * \param angle_threshold the threshold angle (default \f$\pi / 2.0\f$)
+        * \param[in] cloud a pointer to the input point cloud
+        * \param[in] q_point a pointer to the querry point
+        * \param[in] indices the estimated point neighbors of the query point
+        * \param[in] u the u direction
+        * \param[in] v the v direction
+        * \param[in] angle_threshold the threshold angle (default \f$\pi / 2.0\f$)
         */
       bool 
       isBoundaryPoint (const pcl::PointCloud<PointInT> &cloud, 
                        const PointInT &q_point, 
                        const std::vector<int> &indices, 
-                       const Eigen::Vector3f &u, const Eigen::Vector3f &v, float angle_threshold);
+                       const Eigen::Vector4f &u, const Eigen::Vector4f &v, const float angle_threshold);
 
-      /** \brief The decision boundary (angle threshold) that marks points as boundary or regular. (default \f$\pi / 2.0\f$) */
-      float angle_threshold_;
+      /** \brief Set the decision boundary (angle threshold) that marks points as boundary or regular. 
+        * (default \f$\pi / 2.0\f$) 
+        * \param[in] angle the angle threshold
+        */
+      inline void
+      setAngleThreshold (float angle)
+      {
+        angle_threshold_ = angle;
+      }
+
+      /** \brief Get the decision boundary (angle threshold) as set by the user. */
+      float
+      getAngleThreshold ()
+      {
+        return (angle_threshold_);
+      }
+
+      /** \brief Get a u-v-n coordinate system that lies on a plane defined by its normal
+        * \param[in] p_coeff the plane coefficients (containing the plane normal)
+        * \param[out] u the resultant u direction
+        * \param[out] v the resultant v direction
+        */
+      inline void 
+      getCoordinateSystemOnPlane (const PointNT &p_coeff, 
+                                  Eigen::Vector4f &u, Eigen::Vector4f &v)
+      {
+        pcl::Vector4fMapConst p_coeff_v = p_coeff.getNormalVector4fMap ();
+        v = p_coeff_v.unitOrthogonal ();
+        u = p_coeff_v.cross3 (v);
+      }
 
     protected:
-
+ 
       /** \brief Estimate whether a set of points is lying on surface boundaries using an angle criterion for all points
         * given in <setInputCloud (), setIndices ()> using the surface in setSearchSurface () and the spatial locator in
         * setSearchMethod ()
-        * \param output the resultant point cloud model dataset that contains boundary point estimates
+        * \param[out] output the resultant point cloud model dataset that contains boundary point estimates
         */
       void 
       computeFeature (PointCloudOut &output);
+
+      /** \brief The decision boundary (angle threshold) that marks points as boundary or regular. (default \f$\pi / 2.0\f$) */
+      float angle_threshold_;
   };
 }
-
-#include "pcl/features/impl/boundary.hpp"
 
 #endif  //#ifndef PCL_BOUNDARY_H_
 

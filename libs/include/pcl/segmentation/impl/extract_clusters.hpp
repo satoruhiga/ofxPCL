@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: extract_clusters.hpp 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: extract_clusters.hpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -39,6 +39,8 @@
 #define PCL_SEGMENTATION_IMPL_EXTRACT_CLUSTERS_H_
 
 #include "pcl/segmentation/extract_clusters.h"
+#include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/kdtree/organized_data.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 template <typename PointT> void
@@ -206,7 +208,12 @@ pcl::EuclideanClusterExtraction<PointT>::extract (std::vector<PointIndices> &clu
 
   // Initialize the spatial locator
   if (!tree_)
-    initTree (spatial_locator_, tree_);
+  {
+    if (input_->isOrganized ())
+      tree_.reset (new pcl::OrganizedDataIndex<PointT> ());
+    else
+      tree_.reset (new pcl::KdTreeFLANN<PointT> (false));
+  }
 
   // Send the input dataset to the spatial locator
   tree_->setInputCloud (input_, indices_);

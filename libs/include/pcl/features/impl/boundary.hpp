@@ -1,7 +1,9 @@
 /*
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2009, Willow Garage, Inc.
+ *  Point Cloud Library (PCL) - www.pointclouds.org
+ *  Copyright (c) 2010-2011, Willow Garage, Inc.
+ *
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,7 +33,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: boundary.hpp 1667 2011-07-10 22:44:00Z rusu $
+ * $Id: boundary.hpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -46,8 +48,8 @@ template <typename PointInT, typename PointNT, typename PointOutT> bool
   pcl::BoundaryEstimation<PointInT, PointNT, PointOutT>::isBoundaryPoint (
       const pcl::PointCloud<PointInT> &cloud, int q_idx, 
       const std::vector<int> &indices, 
-      const Eigen::Vector3f &u, const Eigen::Vector3f &v, 
-      float angle_threshold)
+      const Eigen::Vector4f &u, const Eigen::Vector4f &v, 
+      const float angle_threshold)
 {
   return (isBoundaryPoint (cloud, cloud.points[q_idx], indices, u, v, angle_threshold));
 }
@@ -57,34 +59,38 @@ template <typename PointInT, typename PointNT, typename PointOutT> bool
   pcl::BoundaryEstimation<PointInT, PointNT, PointOutT>::isBoundaryPoint (
       const pcl::PointCloud<PointInT> &cloud, const PointInT &q_point, 
       const std::vector<int> &indices, 
-      const Eigen::Vector3f &u, const Eigen::Vector3f &v, 
-      float angle_threshold)
+      const Eigen::Vector4f &u, const Eigen::Vector4f &v, 
+      const float angle_threshold)
 {
   if (indices.size () < 3)
     return (false);
-  float uvn_nn[2];
-  Eigen::Vector3f delta;
-  delta.setZero ();
+
+  if (!pcl_isfinite (q_point.x) || !pcl_isfinite (q_point.y) || !pcl_isfinite (q_point.z))
+    return (false);
+
   // Compute the angles between each neighboring point and the query point itself
-  std::vector<float> angles;
-  angles.reserve (indices.size ());
+  std::vector<float> angles (indices.size ());
+  float max_dif = FLT_MIN, dif;
+  int cp = 0;
+
   for (size_t i = 0; i < indices.size (); ++i)
   {
-    delta[0] = cloud.points[indices[i]].x - q_point.x;
-    delta[1] = cloud.points[indices[i]].y - q_point.y;
-    delta[2] = cloud.points[indices[i]].z - q_point.z;
-
-    uvn_nn[0] = u.dot (delta);
-    uvn_nn[1] = v.dot (delta);
-
-    if (uvn_nn[0] == 0 && uvn_nn[1] == 0)
+    if (!pcl_isfinite (cloud.points[indices[i]].x) || 
+        !pcl_isfinite (cloud.points[indices[i]].y) || 
+        !pcl_isfinite (cloud.points[indices[i]].z))
       continue;
-    angles.push_back (atan2 (uvn_nn[1], uvn_nn[0])); // the angles are fine between -PI and PI too
+
+    Eigen::Vector4f delta = cloud.points[indices[i]].getVector4fMap () - q_point.getVector4fMap ();
+
+    angles[cp++] = atan2f (v.dot (delta), u.dot (delta)); // the angles are fine between -PI and PI too
   }
+  if (cp == 0)
+    return (false);
+
+  angles.resize (cp);
   std::sort (angles.begin (), angles.end ());
 
   // Compute the maximal angle difference between two consecutive angles
-  float max_dif = FLT_MIN, dif;
   for (size_t i = 0; i < angles.size () - 1; ++i)
   {
     dif = angles[i + 1] - angles[i];
@@ -112,14 +118,24 @@ template <typename PointInT, typename PointNT, typename PointOutT> void
   std::vector<int> nn_indices (k_);
   std::vector<float> nn_dists (k_);
 
-  Eigen::Vector3f u, v;
+  Eigen::Vector4f u = Eigen::Vector4f::Zero (), v = Eigen::Vector4f::Zero ();
 
   // Iterating over the entire index vector
   for (size_t idx = 0; idx < indices_->size (); ++idx)
   {
+    if (!pcl_isfinite (input_->points[(*indices_)[idx]].x) || 
+        !pcl_isfinite (input_->points[(*indices_)[idx]].y) || 
+        !pcl_isfinite (input_->points[(*indices_)[idx]].z))
+    {
+      output.points[idx].boundary_point = 0;
+      continue;
+    }
+
     this->searchForNeighbors ((*indices_)[idx], search_parameter_, nn_indices, nn_dists);
 
     // Obtain a coordinate system on the least-squares plane
+    //v = normals_->points[(*indices_)[idx]].getNormalVector4fMap ().unitOrthogonal ();
+    //u = normals_->points[(*indices_)[idx]].getNormalVector4fMap ().cross3 (v);
     getCoordinateSystemOnPlane (normals_->points[(*indices_)[idx]], u, v);
 
     // Estimate whether the point is lying on a boundary surface or not

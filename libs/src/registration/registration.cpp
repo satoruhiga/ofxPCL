@@ -1,7 +1,9 @@
 /*
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2010, Willow Garage, Inc.
+ *  Point Cloud Library (PCL) - www.pointclouds.org
+ *  Copyright (c) 2010-2011, Willow Garage, Inc.
+ *
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,17 +33,11 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: registration.cpp 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: registration.cpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
-/**
-
-\author Radu Bogdan Rusu
-
-**/
-
-#include "pcl/point_types.h"
+/*#include "pcl/point_types.h"
 #include "pcl/registration/registration.h"
 #include "pcl/registration/icp.h"
 #include "pcl/registration/icp_nl.h"
@@ -49,10 +45,10 @@
 #include "pcl/registration/correspondence_rejection.h"
 #include "pcl/registration/correspondence_rejection_distance.h"
 #include "pcl/registration/correspondence_rejection_one_to_one.h"
-#include "pcl/registration/correspondence_rejection_reciprocal.h"
 #include "pcl/registration/correspondence_rejection_sample_consensus.h"
 #include "pcl/registration/correspondence_rejection_trimmed.h"
 #include "pcl/registration/correspondence_sorting.h"
+*/
 
 //typedef pcl::IterativeClosestPoint<pcl::PointXYZ,pcl::PointXYZ> IterativeClosestPoint;
 //typedef pcl::IterativeClosestPointNonLinear<pcl::PointXYZ,pcl::PointXYZ> IterativeClosestPointNonLinear;

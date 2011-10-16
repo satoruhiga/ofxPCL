@@ -1,7 +1,9 @@
 /*
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2010, Willow Garage, Inc.
+ *  Point Cloud Library (PCL) - www.pointclouds.org
+ *  Copyright (c) 2010-2011, Willow Garage, Inc.
+ *
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,7 +33,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: point_cloud.h 1805 2011-07-15 17:15:55Z rusu $
+ * $Id: point_cloud.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -97,6 +99,21 @@ namespace pcl
         *this = pc;
       }
 
+      /** \brief Copy constructor from point cloud subset
+        * \param pc the cloud to copy into this
+        * \param indices the subset to copy
+        */
+      inline PointCloud (const PointCloud<PointT> &pc, 
+                         const std::vector<size_t> &indices)
+      {
+        assert(indices.size () <= pc.size ());
+        this->resize (indices.size ());
+        for(size_t i = 0; i < indices.size (); i++)
+        {
+          this->push_back (pc[indices[i]]);
+        }
+      }
+
       ////////////////////////////////////////////////////////////////////////////////////////
       inline PointCloud&
       operator += (const PointCloud& rhs)
@@ -117,7 +134,7 @@ namespace pcl
         for (size_t i = nr_points; i < points.size (); ++i)
           points[i] = rhs.points[i - nr_points];
 
-        width    = points.size ();
+        width    = (uint32_t) points.size ();
         height   = 1;
         if (rhs.is_dense && is_dense)
           is_dense = true;
@@ -153,9 +170,9 @@ namespace pcl
       /** \brief Return whether a dataset is organized (e.g., arranged in a structured grid).
         */
       inline bool
-      isOrganized ()
+      isOrganized () const
       {
-        return (this->height != 1);
+        return (height != 1);
       }
       
       ////////////////////////////////////////////////////////////////////////////////////////
@@ -218,7 +235,7 @@ namespace pcl
       inline size_t size () const { return (points.size ()); }
       inline void reserve(size_t n) { points.reserve (n); }
       inline void resize(size_t n) { points.resize (n); }
-      inline bool empty() { return points.empty (); }
+      inline bool empty() const { return points.empty (); }
 
       //element access
       inline const PointT& operator[] (size_t n) const { return points[n]; }
@@ -231,27 +248,55 @@ namespace pcl
       inline PointT& back () { return points.back (); }
 
       //modifiers
-      inline void push_back (const PointT& p) { points.push_back (p); }
+      inline void push_back (const PointT& p) {
+        points.push_back (p);
+        width = points.size ();
+        height = 1;
+      }
       inline iterator insert ( iterator position, const PointT& x )
       {
-        return points.insert (position, x);
+        iterator it = points.insert (position, x);
+        width = points.size ();
+        height = 1;
+        return it;
       }
       inline void insert ( iterator position, size_t n, const PointT& x )
       {
         points.insert (position, n, x);
+        width = points.size ();
+        height = 1;
       }
       template <class InputIterator>
       inline void insert ( iterator position, InputIterator first, InputIterator last )
       {
         points.insert(position, first, last);
       }
-      inline iterator erase ( iterator position ) { return points.erase (position); }
+      inline iterator erase ( iterator position )
+      {
+        iterator it = points.erase (position); 
+        width = points.size ();
+        height = 1;
+        return it;
+      }
       inline iterator erase ( iterator first, iterator last )
       {
-        return points.erase (first, last);
+        iterator it = points.erase (first, last);
+        width = points.size ();
+        height = 1;
+        return it;
       }
-      inline void swap (PointCloud<PointT> &rhs) { this->points.swap (rhs.points); }
-      inline void clear () { points.clear (); }
+      inline void swap (PointCloud<PointT> &rhs)
+      {
+        this->points.swap (rhs.points);
+        std::swap (width, rhs.width);
+        std::swap (height, rhs.height);
+      }
+      inline void clear ()
+      {
+        points.clear ();
+        width = 0;
+        height = 0;
+      }
 
       /** \brief Copy the cloud to the heap and return a smart pointer
         * Note that deep copy is performed, so avoid using this function on non-empty clouds.

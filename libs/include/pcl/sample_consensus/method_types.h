@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: method_types.h 1672 2011-07-11 00:32:28Z rusu $
+ * $Id: method_types.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 

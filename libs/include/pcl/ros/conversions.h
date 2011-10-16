@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: conversions.h 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: conversions.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -158,7 +158,7 @@ namespace pcl
     cloud.header   = msg.header;
     cloud.width    = msg.width;
     cloud.height   = msg.height;
-    cloud.is_dense = msg.is_dense;
+    cloud.is_dense = msg.is_dense == 1;
 
     // Copy point data
     uint32_t num_points = msg.width * msg.height;
@@ -218,7 +218,7 @@ namespace pcl
     // Ease the user's burden on specifying width/height for unorganized datasets
     if (cloud.width == 0 && cloud.height == 0)
     {
-      msg.width  = cloud.points.size ();
+      msg.width  = (uint32_t) cloud.points.size ();
       msg.height = 1;
     }
     else
@@ -292,7 +292,7 @@ namespace pcl
     for (size_t d = 0; d < cloud.fields.size (); ++d)
       if (cloud.fields[d].name == "rgb")
       {
-        rgb_index = d;
+        rgb_index = (int) d;
         break;
       }
 

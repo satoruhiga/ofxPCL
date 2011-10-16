@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: mls.hpp 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: mls.hpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -39,8 +39,9 @@
 #define PCL_SURFACE_IMPL_MLS_H_
 
 #include "pcl/surface/mls.h"
-#include "pcl/io/io.h"
-#include "pcl/features/normal_3d.h"
+#include <pcl/common/io.h>
+#include <pcl/common/centroid.h>
+#include <pcl/common/eigen.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 template <typename PointInT, typename NormalOutT> void
@@ -78,31 +79,6 @@ pcl::MovingLeastSquares<PointInT, NormalOutT>::reconstruct (PointCloudIn &output
   // Send the surface dataset to the spatial locator
   tree_->setInputCloud (input_, indices_);
 
-  // Resize the output dataset
-  if (output.points.size () != indices_->size ())
-    output.points.resize (indices_->size ());
-  // Check if the output will be computed for all points or only a subset
-  if (indices_->size () != input_->points.size ())
-  {
-    output.width    = indices_->size ();
-    output.height   = 1;
-  }
-  else
-  {
-    output.width    = input_->width;
-    output.height   = input_->height;
-  }
-  output.is_dense = input_->is_dense;
-
-  // Resize the output normal dataset
-  if (normals_)
-  {
-    normals_->points.resize (output.points.size ());
-    normals_->width    = output.width;
-    normals_->height   = output.height;
-    normals_->is_dense = output.is_dense;
-  }
-
   // Perform the actual surface reconstruction
   performReconstruction (output);
 
@@ -137,7 +113,20 @@ pcl::MovingLeastSquares<PointInT, NormalOutT>::performReconstruction (PointCloud
   // Use original point positions for fitting
   // \note no up/down/adapting-sampling or hole filling possible like this
   output.points.resize (indices_->size ());
-  pcl::copyPointCloud (*input_, *indices_, output);
+  // Check if fake indices were used, otherwise the output loses its organized structure
+  if (!fake_indices_)
+    pcl::copyPointCloud (*input_, *indices_, output);
+  else
+    output = *input_;
+
+  // Resize the output normal dataset
+  if (normals_)
+  {
+    normals_->points.resize (output.points.size ());
+    normals_->width    = output.width;
+    normals_->height   = output.height;
+    normals_->is_dense = output.is_dense;
+  }
 
   // For all points
   for (size_t cp = 0; cp < indices_->size (); ++cp)
@@ -164,8 +153,34 @@ pcl::MovingLeastSquares<PointInT, NormalOutT>::performReconstruction (PointCloud
 
     // Compute the plane coefficients
     Eigen::Vector4f model_coefficients;
-    float curvature;
-    pcl::computePointNormal<PointInT> (*input_, nn_indices, model_coefficients, curvature);
+    //pcl::computePointNormal<PointInT> (*input_, nn_indices, model_coefficients, curvature);
+    EIGEN_ALIGN16 Eigen::Matrix3f covariance_matrix;
+    Eigen::Vector4f xyz_centroid;
+
+    // Estimate the XYZ centroid
+    pcl::compute3DCentroid (*input_, nn_indices, xyz_centroid);
+
+    // Compute the 3x3 covariance matrix
+    pcl::computeCovarianceMatrix (*input_, nn_indices, xyz_centroid, covariance_matrix);
+
+    // Get the plane normal
+    EIGEN_ALIGN16 Eigen::Vector3f eigen_values;
+    EIGEN_ALIGN16 Eigen::Matrix3f eigen_vectors;
+    pcl::eigen33 (covariance_matrix, eigen_vectors, eigen_values);
+
+    // The normalization is not necessary, since the eigenvectors from libeigen are already normalized
+    model_coefficients[0] = eigen_vectors (0, 0);
+    model_coefficients[1] = eigen_vectors (1, 0);
+    model_coefficients[2] = eigen_vectors (2, 0);
+    model_coefficients[3] = 0;
+    // Hessian form (D = nc . p_plane (centroid here) + p)
+    model_coefficients[3] = -1 * model_coefficients.dot (xyz_centroid);
+
+    float curvature = 0;
+    // Compute the curvature surface change
+    float eig_sum = eigen_values.sum ();
+    if (eig_sum != 0)
+      curvature = fabs (eigen_values[0] / eig_sum);
 
     // Projected point
     Eigen::Vector3f point = output.points[cp].getVector3fMap ();
@@ -242,7 +257,7 @@ pcl::MovingLeastSquares<PointInT, NormalOutT>::performReconstruction (PointCloud
       P_weight_Pt_.llt ().solveInPlace (c_vec_);
 
       // Projection onto MLS surface along Darboux normal to the height at (0,0)
-      if (!pcl_isfinite (c_vec_[0]))
+      if (pcl_isfinite (c_vec_[0]))
       {
         point += (c_vec_[0] * plane_normal).cast<float> ();
 

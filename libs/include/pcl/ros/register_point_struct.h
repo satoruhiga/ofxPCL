@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: register_point_struct.h 1380 2011-06-19 11:34:29Z bouffa $
+ * $Id: register_point_struct.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 

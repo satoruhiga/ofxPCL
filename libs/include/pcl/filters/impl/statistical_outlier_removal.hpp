@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: statistical_outlier_removal.hpp 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: statistical_outlier_removal.hpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -39,6 +39,8 @@
 #define PCL_FILTERS_IMPL_STATISTICAL_OUTLIER_REMOVAL_H_
 
 #include "pcl/filters/statistical_outlier_removal.h"
+#include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/kdtree/organized_data.h>
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 template <typename PointT> void
@@ -53,10 +55,13 @@ pcl::StatisticalOutlierRemoval<PointT>::applyFilter (PointCloud &output)
   }
 
   // Initialize the spatial locator
-  //initTree (spatial_locator_type_, tree_, k_);
-
-  // TODO: fix this
-  tree_.reset (new KdTreeFLANN<PointT> (false));
+  if (!tree_)
+  {
+    if (input_->isOrganized ())
+      tree_.reset (new pcl::OrganizedDataIndex<PointT> ());
+    else
+      tree_.reset (new pcl::KdTreeFLANN<PointT> (false));
+  }
 
   // Send the input dataset to the spatial locator
   tree_->setInputCloud (input_);

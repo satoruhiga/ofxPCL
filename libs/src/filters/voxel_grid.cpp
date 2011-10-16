@@ -31,14 +31,14 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: voxel_grid.cpp 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: voxel_grid.cpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
 #include <iostream>
 #include "pcl/impl/instantiate.hpp"
 #include "pcl/point_types.h"
-#include "pcl/io/io.h"
+#include "pcl/common/io.h"
 #include "pcl/filters/voxel_grid.h"
 #include "pcl/filters/impl/voxel_grid.hpp"
 
@@ -347,11 +347,11 @@ pcl::VoxelGrid<sensor_msgs::PointCloud2>::applyFilter (PointCloud2 &output)
         // fill in extra r/g/b centroid field
         if (rgba_index >= 0)
         {
-          int rgb;
-          memcpy (&rgb, &input_->data[point_offset + input_->fields[rgba_index].offset], sizeof (int));
-          centroid[centroid_size-3] = (rgb>>16) & 0x0000ff;
-          centroid[centroid_size-2] = (rgb>>8)  & 0x0000ff;
-          centroid[centroid_size-1] = (rgb)     & 0x0000ff;
+          pcl::RGB rgb;
+          memcpy (&rgb, &input_->data[point_offset + input_->fields[rgba_index].offset], sizeof (RGB));
+          centroid[centroid_size-3] = rgb.r;
+          centroid[centroid_size-2] = rgb.g;
+          centroid[centroid_size-1] = rgb.b;
         }
         // Copy all the fields
         for (unsigned int d = 0; d < input_->fields.size (); ++d)
@@ -408,11 +408,11 @@ pcl::VoxelGrid<sensor_msgs::PointCloud2>::applyFilter (PointCloud2 &output)
         // fill extra r/g/b centroid field
         if (rgba_index >= 0)
         {
-          int rgb;
-          memcpy (&rgb, &input_->data[point_offset + input_->fields[rgba_index].offset], sizeof (int));
-          centroid[centroid_size-3] = (rgb>>16) & 0x0000ff;
-          centroid[centroid_size-2] = (rgb>>8)  & 0x0000ff;
-          centroid[centroid_size-1] = (rgb)     & 0x0000ff;
+          pcl::RGB rgb;
+          memcpy (&rgb, &input_->data[point_offset + input_->fields[rgba_index].offset], sizeof (RGB));
+          centroid[centroid_size-3] = rgb.r;
+          centroid[centroid_size-2] = rgb.g;
+          centroid[centroid_size-1] = rgb.b;
         }
         // Copy all the fields
         for (unsigned int d = 0; d < input_->fields.size(); ++d)

@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: convex_hull.hpp 1429 2011-06-21 17:39:47Z rusu $
+ * $Id: convex_hull.hpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -42,9 +42,12 @@
 #define PCL_SURFACE_IMPL_CONVEX_HULL_H_
 
 #include "pcl/surface/convex_hull.h"
-#include "pcl/common/common.h"
+#include <pcl/common/common.h>
+#include <pcl/common/io.h>
+#include <pcl/common/eigen.h>
 #include "pcl/registration/transforms.h"
-#include "pcl/kdtree/kdtree.h"
+#include <pcl/kdtree/kdtree.h>
+#include <pcl/kdtree/kdtree_flann.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -146,7 +149,8 @@ pcl::ConvexHull<PointInT>::performReconstruction (PointCloud &hull, std::vector<
 
   if (exitcode != 0)
   {
-    PCL_ERROR ("[pcl::%s::performReconstrution] ERROR: qhull was unable to compute a convex hull for the given point cloud (%zu)!\n", getClassName ().c_str (), input_->points.size ());
+    PCL_ERROR ("[pcl::%s::performReconstrution] ERROR: qhull was unable to compute a convex hull for the given point cloud (%lu)!\n", 
+               getClassName ().c_str (), (unsigned long) input_->points.size ());
 
     //check if it fails because of NaN values...
     if (!cloud_transformed.is_dense)

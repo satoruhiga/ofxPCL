@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: sac_model_sphere.hpp 1400 2011-06-20 06:14:12Z rusu $
+ * $Id: sac_model_sphere.hpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -161,7 +161,7 @@ pcl::SampleConsensusModelSphere<PointT>::getDistancesToModel (
 //////////////////////////////////////////////////////////////////////////
 template <typename PointT> void
 pcl::SampleConsensusModelSphere<PointT>::selectWithinDistance (
-      const Eigen::VectorXf &model_coefficients, double threshold, std::vector<int> &inliers)
+      const Eigen::VectorXf &model_coefficients, const double threshold, std::vector<int> &inliers)
 {
   // Check if the model is valid given the user constraints
   if (!isModelValid (model_coefficients))
@@ -195,6 +195,37 @@ pcl::SampleConsensusModelSphere<PointT>::selectWithinDistance (
     }
   }
   inliers.resize (nr_p);
+}
+
+//////////////////////////////////////////////////////////////////////////
+template <typename PointT> int
+pcl::SampleConsensusModelSphere<PointT>::countWithinDistance (
+      const Eigen::VectorXf &model_coefficients, const double threshold)
+{
+  // Check if the model is valid given the user constraints
+  if (!isModelValid (model_coefficients))
+    return (0);
+
+  int nr_p = 0;
+
+  // Iterate through the 3d points and calculate the distances from them to the sphere
+  for (size_t i = 0; i < indices_->size (); ++i)
+  {
+    // Calculate the distance from the point to the sphere as the difference between
+    // dist(point,sphere_origin) and sphere_radius
+    if (fabs (sqrt (
+                    ( input_->points[(*indices_)[i]].x - model_coefficients[0] ) *
+                    ( input_->points[(*indices_)[i]].x - model_coefficients[0] ) +
+
+                    ( input_->points[(*indices_)[i]].y - model_coefficients[1] ) *
+                    ( input_->points[(*indices_)[i]].y - model_coefficients[1] ) +
+
+                    ( input_->points[(*indices_)[i]].z - model_coefficients[2] ) *
+                    ( input_->points[(*indices_)[i]].z - model_coefficients[2] )
+                   ) - model_coefficients[3]) < threshold)
+      nr_p++;
+  }
+  return (nr_p);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -299,7 +330,7 @@ pcl::SampleConsensusModelSphere<PointT>::projectPoints (
 //////////////////////////////////////////////////////////////////////////
 template <typename PointT> bool
 pcl::SampleConsensusModelSphere<PointT>::doSamplesVerifyModel (
-      const std::set<int> &indices, const Eigen::VectorXf &model_coefficients, double threshold)
+      const std::set<int> &indices, const Eigen::VectorXf &model_coefficients, const double threshold)
 {
   // Needs a valid model coefficients
   if (model_coefficients.size () != 4)

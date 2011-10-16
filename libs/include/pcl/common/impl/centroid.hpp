@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: centroid.hpp 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: centroid.hpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -97,7 +97,7 @@ pcl::compute3DCentroid (const pcl::PointCloud<PointT> &cloud, const std::vector<
     for (size_t i = 0; i < indices.size (); ++i)
       centroid += cloud.points[indices[i]].getVector4fMap ();
     centroid[3] = 0;
-    centroid /= indices.size ();
+    centroid /= (float) indices.size ();
   }
   // NaN or Inf values could exist => check for them
   else
@@ -113,8 +113,8 @@ pcl::compute3DCentroid (const pcl::PointCloud<PointT> &cloud, const std::vector<
       centroid += cloud.points[indices[i]].getVector4fMap ();
       cp++;
     }
-    centroid[3] = 0;
-    centroid /= cp;
+    centroid[3] = 0.0f;
+    centroid /= (float) cp;
   }
 }
 

@@ -1,7 +1,7 @@
 /*
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2010, Willow Garage, Inc.
+ *  Copyright (c) 2009, Willow Garage, Inc.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,21 +31,15 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
+ * $Id: sac_model_line.cpp 1370 2011-06-19 01:06:01Z jspricke $
  *
  */
-#ifndef PCL_REGISTRATION_IMPL_CORRESPONDENCE_REJECTION_RECIPROCAL_HPP_
-#define PCL_REGISTRATION_IMPL_CORRESPONDENCE_REJECTION_RECIPROCAL_HPP_
 
-void
-pcl::registration::CorrespondenceRejectorReciprocal::applyRejection(pcl::registration::Correspondences &correspondences)
-{
+#include "pcl/impl/instantiate.hpp"
+#include "pcl/point_types.h"
+#include "pcl/sample_consensus/sac_model_stick.h"
+#include "pcl/sample_consensus/impl/sac_model_stick.hpp"
 
-}
+// Instantiations of specific point types
+PCL_INSTANTIATE(SampleConsensusModelStick, PCL_XYZ_POINT_TYPES);
 
-void
-pcl::registration::CorrespondenceRejectorReciprocal::getCorrespondences(const pcl::registration::Correspondences& original_correspondences, pcl::registration::Correspondences& remaining_correspondences)
-{
-
-}
-
-#endif /* PCL_REGISTRATION_IMPL_CORRESPONDENCE_REJECTION_RECIPROCAL_HPP_ */

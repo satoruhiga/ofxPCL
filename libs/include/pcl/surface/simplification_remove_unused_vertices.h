@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: simplification_remove_unused_vertices.h 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: simplification_remove_unused_vertices.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -39,12 +39,13 @@
 #define PCL_SURFACE_SIMPLIFICATION_REMOVE_UNUSED_VERTICES_H_
 
 #include <pcl/PolygonMesh.h>
+#include <pcl/pcl_macros.h>
 
 namespace pcl
 {
   namespace surface
   {
-    class SimplificationRemoveUnusedVertices
+    class PCL_EXPORTS SimplificationRemoveUnusedVertices
     {
 
       public:

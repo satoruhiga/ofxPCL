@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: voxel_grid.h 1523 2011-07-01 00:56:33Z rusu $
+ * $Id: voxel_grid.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -379,6 +379,12 @@ namespace pcl
         min_b_.setZero ();
         max_b_.setZero ();
         filter_name_ = "VoxelGrid";
+      }
+
+      /** \brief Destructor. */
+      virtual ~VoxelGrid ()
+      {
+        leaves_.clear();
       }
 
       /** \brief Set the voxel grid leaf size.

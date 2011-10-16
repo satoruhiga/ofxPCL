@@ -110,7 +110,7 @@ RangeImage::createFromPointCloud(const PointCloudType& point_cloud, float angula
   getCoordinateFrameTransformation(coordinate_frame, to_world_system_);
   to_world_system_ = sensor_pose * to_world_system_;
   
-  getInverse(to_world_system_, to_range_image_system_);
+  to_range_image_system_ = to_world_system_.inverse ();
   //std::cout << "to_world_system_ is\n"<<to_world_system_<<"\nand to_range_image_system_ is\n"<<to_range_image_system_<<"\n\n";
   
   unsigned int size = width*height;
@@ -156,7 +156,7 @@ RangeImage::createFromPointCloudWithKnownSize(const PointCloudType& point_cloud,
   
   getCoordinateFrameTransformation(coordinate_frame, to_world_system_);
   to_world_system_ = sensor_pose * to_world_system_;
-  getInverse(to_world_system_, to_range_image_system_);
+  to_range_image_system_ = to_world_system_.inverse ();
   
   float max_angle_size = getMaxAngleSize(sensor_pose, point_cloud_center, point_cloud_radius);
   int pixel_radius = pcl_lrint(ceil(0.5f*max_angle_size*angular_resolution_reciprocal_));
@@ -443,8 +443,8 @@ RangeImage::getPointConsideringWrapAround(int image_x, int image_y) const
     getImagePointFromAngles(angle_x, angle_y, image_x_f, image_y_f);
     int new_image_x, new_image_y;
     real2DToInt2D(image_x_f, image_y_f, new_image_x, new_image_y);
-    if (image_x!=new_image_x || image_y!=new_image_y)
-      std::cout << image_x<<","<<image_y << " was change to "<<new_image_x<<","<<new_image_y<<"\n";
+    //if (image_x!=new_image_x || image_y!=new_image_y)
+      //std::cout << image_x<<","<<image_y << " was change to "<<new_image_x<<","<<new_image_y<<"\n";
     if (!isInImage(new_image_x, new_image_y))
       return unobserved_point;
     image_x=new_image_x; image_y=new_image_y;
@@ -503,7 +503,9 @@ RangeImage::getPoint(float image_x, float image_y) const
 PointWithRange& 
 RangeImage::getPoint(float image_x, float image_y)
 {
-  return getPoint(image_x, image_y);
+  int x, y;
+  real2DToInt2D(image_x, image_y, x, y);
+  return getPoint(x, y);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -599,7 +601,7 @@ RangeImage::getImpactAngle(const PointWithRange& point1, const PointWithRange& p
   
   float r1 = (std::min)(point1.range, point2.range),
         r2 = (std::max)(point1.range, point2.range);
-  float impact_angle = 0.5f*M_PI;
+  float impact_angle = (float) (0.5f*M_PI);
   
   if (pcl_isinf(r2)) {
     if (r2 > 0.0f && !pcl_isinf(r1))
@@ -761,7 +763,7 @@ RangeImage::getSurfaceAngleChange(int x, int y, int radius, float& angle_change_
 float 
 RangeImage::getMaxAngleSize(const Eigen::Affine3f& viewer_pose, const Eigen::Vector3f& center, float radius)
 {
-  return 2.0f * asinf(radius/(getTranslation(viewer_pose)-center).norm());
+  return 2.0f * asinf(radius/(viewer_pose.translation ()-center).norm());
 }
 
 /////////////////////////////////////////////////////////////////////////

@@ -31,14 +31,13 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: ia_ransac.hpp 1583 2011-07-06 19:53:36Z mdixon $
+ * $Id: ia_ransac.hpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename PointSource, typename PointTarget, typename FeatureT> 
-void pcl::SampleConsensusInitialAlignment<PointSource, PointTarget, FeatureT>::
-setSourceFeatures (const FeatureCloudConstPtr &features)
+template <typename PointSource, typename PointTarget, typename FeatureT> void 
+pcl::SampleConsensusInitialAlignment<PointSource, PointTarget, FeatureT>::setSourceFeatures (const FeatureCloudConstPtr &features)
 {
   if (features == NULL || features->points.empty ())
   {
@@ -49,9 +48,8 @@ setSourceFeatures (const FeatureCloudConstPtr &features)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename PointSource, typename PointTarget, typename FeatureT> 
-void pcl::SampleConsensusInitialAlignment<PointSource, PointTarget, FeatureT>::
-setTargetFeatures (const FeatureCloudConstPtr &features)
+template <typename PointSource, typename PointTarget, typename FeatureT> void 
+pcl::SampleConsensusInitialAlignment<PointSource, PointTarget, FeatureT>::setTargetFeatures (const FeatureCloudConstPtr &features)
 {
   if (features == NULL || features->points.empty ())
   {
@@ -63,10 +61,10 @@ setTargetFeatures (const FeatureCloudConstPtr &features)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename PointSource, typename PointTarget, typename FeatureT> 
-void pcl::SampleConsensusInitialAlignment<PointSource, PointTarget, FeatureT>::
-selectSamples (const PointCloudSource &cloud, int nr_samples, float min_sample_distance, 
-               std::vector<int> &sample_indices)
+template <typename PointSource, typename PointTarget, typename FeatureT> void 
+pcl::SampleConsensusInitialAlignment<PointSource, PointTarget, FeatureT>::selectSamples (
+    const PointCloudSource &cloud, int nr_samples, float min_sample_distance, 
+    std::vector<int> &sample_indices)
 {
   if (nr_samples > (int) cloud.points.size ())
   {
@@ -78,12 +76,12 @@ selectSamples (const PointCloudSource &cloud, int nr_samples, float min_sample_d
 
   // Iteratively draw random samples until nr_samples is reached
   int iterations_without_a_sample = 0;
-  int max_iterations_without_a_sample = 3 * cloud.points.size ();
+  int max_iterations_without_a_sample = (int) (3 * cloud.points.size ());
   sample_indices.clear ();
   while ((int) sample_indices.size () < nr_samples)
   {
     // Choose a sample at random
-    int sample_index = getRandomIndex (cloud.points.size ());
+    int sample_index = getRandomIndex ((int) cloud.points.size ());
 
     // Check to see if the sample is 1) unique and 2) far away from the other samples
     bool valid_sample = true;
@@ -124,12 +122,11 @@ selectSamples (const PointCloudSource &cloud, int nr_samples, float min_sample_d
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename PointSource, typename PointTarget, typename FeatureT>
-void pcl::SampleConsensusInitialAlignment<PointSource, PointTarget, FeatureT>::
-findSimilarFeatures (const FeatureCloud &input_features, const std::vector<int> &sample_indices, 
-                     std::vector<int> &corresponding_indices)
+template <typename PointSource, typename PointTarget, typename FeatureT> void 
+pcl::SampleConsensusInitialAlignment<PointSource, PointTarget, FeatureT>::findSimilarFeatures (
+    const FeatureCloud &input_features, const std::vector<int> &sample_indices, 
+    std::vector<int> &corresponding_indices)
 {
   std::vector<int> nn_indices (k_correspondences_);
   std::vector<float> nn_distances (k_correspondences_);
@@ -147,9 +144,9 @@ findSimilarFeatures (const FeatureCloud &input_features, const std::vector<int> 
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename PointSource, typename PointTarget, typename FeatureT>
-float pcl::SampleConsensusInitialAlignment<PointSource, PointTarget, FeatureT>::
-computeErrorMetric (const PointCloudSource &cloud, float threshold)
+template <typename PointSource, typename PointTarget, typename FeatureT> float 
+pcl::SampleConsensusInitialAlignment<PointSource, PointTarget, FeatureT>::computeErrorMetric (
+    const PointCloudSource &cloud, float threshold)
 {
   std::vector<int> nn_index (1);
   std::vector<float> nn_distance (1);
@@ -159,7 +156,7 @@ computeErrorMetric (const PointCloudSource &cloud, float threshold)
   for (size_t i = 0; i < cloud.points.size (); ++i)
   {
     // Find the distance between cloud.points[i] and its nearest neighbor in the target point cloud
-    tree_->nearestKSearch (cloud, i, 1, nn_index, nn_distance);
+    tree_->nearestKSearch (cloud, (int) i, 1, nn_index, nn_distance);
 
     /*
     // Huber penalty measure
@@ -180,11 +177,9 @@ computeErrorMetric (const PointCloudSource &cloud, float threshold)
   return (error);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename PointSource, typename PointTarget, typename FeatureT> 
-void pcl::SampleConsensusInitialAlignment<PointSource, PointTarget, FeatureT>::
-computeTransformation (PointCloudSource &output)
+template <typename PointSource, typename PointTarget, typename FeatureT> void 
+pcl::SampleConsensusInitialAlignment<PointSource, PointTarget, FeatureT>::computeTransformation (PointCloudSource &output)
 {
   if (!input_features_)
   {
@@ -215,11 +210,11 @@ computeTransformation (PointCloudSource &output)
     findSimilarFeatures (*input_features_, sample_indices, corresponding_indices);
 
     // Estimate the transform from the samples to their corresponding points
-    estimateRigidTransformationSVD (*input_, sample_indices, *target_, corresponding_indices, transformation_);
+    transformation_estimation_->estimateRigidTransformation (*input_, sample_indices, *target_, corresponding_indices, transformation_);
 
     // Tranform the data and compute the error
     transformPointCloud (*input_, input_transformed, transformation_);
-    error = computeErrorMetric (input_transformed, corr_dist_threshold_);
+    error = computeErrorMetric (input_transformed, (float) corr_dist_threshold_);
 
     // If the new error is lower, update the final transformation
     if (i_iter == 0 || error < lowest_error)

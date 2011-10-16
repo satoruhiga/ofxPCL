@@ -1,7 +1,9 @@
 /*
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2010, Willow Garage, Inc.
+ *  Point Cloud Library (PCL) - www.pointclouds.org
+ *  Copyright (c) 2010-2011, Willow Garage, Inc.
+ *
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,7 +33,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: sac_model_perpendicular_plane.h 1717 2011-07-13 01:03:04Z rusu $
+ * $Id: sac_model_perpendicular_plane.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -43,7 +45,6 @@
 
 namespace pcl
 {
-  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /** \brief @b SampleConsensusModelPerpendicularPlane defines a model for 3D plane segmentation using additional
     * angular constraints. The plane must be perpendicular to an user-specified axis (\ref setAxis), up to an user-specified angle threshold (\ref setEpsAngle).
     * The model coefficients are defined as:
@@ -61,6 +62,8 @@ namespace pcl
     * model.setEpsAngle (pcl::deg2rad (15));
     * \endcode
     *
+    * \note Please remember that you need to specify an angle > 0 in order to activate the axis-angle constraint!
+    *
     * \author Radu Bogdan Rusu
     * \ingroup sample_consensus
     */
@@ -75,61 +78,84 @@ namespace pcl
       typedef boost::shared_ptr<SampleConsensusModelPerpendicularPlane> Ptr;
 
       /** \brief Constructor for base SampleConsensusModelPerpendicularPlane.
-        * \param cloud the input point cloud dataset
+        * \param[in] cloud the input point cloud dataset
         */
-      SampleConsensusModelPerpendicularPlane (const PointCloudConstPtr &cloud) : SampleConsensusModelPlane<PointT> (cloud),
-                                                                            eps_angle_ (0.0)
+      SampleConsensusModelPerpendicularPlane (const PointCloudConstPtr &cloud) : 
+        SampleConsensusModelPlane<PointT> (cloud), eps_angle_ (0.0)
       {
         axis_.setZero ();
       }
 
       /** \brief Constructor for base SampleConsensusModelPerpendicularPlane.
-        * \param cloud the input point cloud dataset
-        * \param indices a vector of point indices to be used from \a cloud
+        * \param[in] cloud the input point cloud dataset
+        * \param[in] indices a vector of point indices to be used from \a cloud
         */
-      SampleConsensusModelPerpendicularPlane (const PointCloudConstPtr &cloud, const std::vector<int> &indices) : SampleConsensusModelPlane<PointT> (cloud, indices),
-                                                                                                             eps_angle_ (0.0)
+      SampleConsensusModelPerpendicularPlane (const PointCloudConstPtr &cloud, 
+                                              const std::vector<int> &indices) : 
+        SampleConsensusModelPlane<PointT> (cloud, indices), eps_angle_ (0.0)
       {
         axis_.setZero ();
       }
 
       /** \brief Set the axis along which we need to search for a plane perpendicular to.
-        * \param ax the axis along which we need to search for a plane perpendicular to
+        * \param[in] ax the axis along which we need to search for a plane perpendicular to
         */
-      inline void setAxis (const Eigen::Vector3f &ax) { axis_ = ax; }
+      inline void 
+      setAxis (const Eigen::Vector3f &ax) { axis_ = ax; }
 
       /** \brief Get the axis along which we need to search for a plane perpendicular to. */
-      inline Eigen::Vector3f getAxis ()  { return (axis_); }
+      inline Eigen::Vector3f 
+      getAxis ()  { return (axis_); }
 
       /** \brief Set the angle epsilon (delta) threshold.
-        * \param ea the maximum allowed difference between the plane normal and the given axis.
+        * \param[in] ea the maximum allowed difference between the plane normal and the given axis.
+        * \note You need to specify an angle > 0 in order to activate the axis-angle constraint!
         */
-      inline void setEpsAngle (double ea) { eps_angle_ = ea; }
+      inline void 
+      setEpsAngle (const double ea) { eps_angle_ = ea; }
 
       /** \brief Get the angle epsilon (delta) threshold. */
-      inline double getEpsAngle () { return (eps_angle_); }
+      inline double 
+      getEpsAngle () { return (eps_angle_); }
 
       /** \brief Select all the points which respect the given model coefficients as inliers.
-        * \param model_coefficients the coefficients of a plane model that we need to compute distances to
-        * \param inliers the resultant model inliers
-        * \param threshold a maximum admissible distance threshold for determining the inliers from the outliers
+        * \param[in] model_coefficients the coefficients of a plane model that we need to compute distances to
+        * \param[in] threshold a maximum admissible distance threshold for determining the inliers from the outliers
+        * \param[out] inliers the resultant model inliers
         */
-      void selectWithinDistance (const Eigen::VectorXf &model_coefficients, double threshold, std::vector<int> &inliers);
+      void 
+      selectWithinDistance (const Eigen::VectorXf &model_coefficients, 
+                            const double threshold, 
+                            std::vector<int> &inliers);
+
+      /** \brief Count all the points which respect the given model coefficients as inliers. 
+        * 
+        * \param[in] model_coefficients the coefficients of a model that we need to compute distances to
+        * \param[in] threshold maximum admissible distance threshold for determining the inliers from the outliers
+        * \return the resultant number of inliers
+        */
+      virtual int
+      countWithinDistance (const Eigen::VectorXf &model_coefficients, 
+                           const double threshold);
 
       /** \brief Compute all distances from the cloud data to a given plane model.
-        * \param model_coefficients the coefficients of a plane model that we need to compute distances to
-        * \param distances the resultant estimated distances
+        * \param[in] model_coefficients the coefficients of a plane model that we need to compute distances to
+        * \param[out] distances the resultant estimated distances
         */
-      void getDistancesToModel (const Eigen::VectorXf &model_coefficients, std::vector<double> &distances);
+      void 
+      getDistancesToModel (const Eigen::VectorXf &model_coefficients, 
+                           std::vector<double> &distances);
 
       /** \brief Return an unique id for this model (SACMODEL_PERPENDICULAR_PLANE). */
-      inline pcl::SacModel getModelType () const { return (SACMODEL_PERPENDICULAR_PLANE); }
+      inline pcl::SacModel 
+      getModelType () const { return (SACMODEL_PERPENDICULAR_PLANE); }
 
     protected:
       /** \brief Check whether a model is valid given the user constraints.
-        * \param model_coefficients the set of model coefficients
+        * \param[in] model_coefficients the set of model coefficients
         */
-      bool isModelValid (const Eigen::VectorXf &model_coefficients);
+      bool 
+      isModelValid (const Eigen::VectorXf &model_coefficients);
 
       /** \brief The axis along which we need to search for a plane perpendicular to. */
       Eigen::Vector3f axis_;

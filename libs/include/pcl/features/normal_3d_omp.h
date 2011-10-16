@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: normal_3d_omp.h 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: normal_3d_omp.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -54,6 +54,7 @@ namespace pcl
       using Feature<PointInT, PointOutT>::feature_name_;
       using Feature<PointInT, PointOutT>::getClassName;
       using Feature<PointInT, PointOutT>::indices_;
+      using Feature<PointInT, PointOutT>::input_;
       using Feature<PointInT, PointOutT>::k_;
       using Feature<PointInT, PointOutT>::search_parameter_;
       using Feature<PointInT, PointOutT>::surface_;

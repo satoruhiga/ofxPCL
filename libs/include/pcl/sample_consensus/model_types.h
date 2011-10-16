@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: model_types.h 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: model_types.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -58,14 +58,15 @@ namespace pcl
     SACMODEL_NORMAL_PLANE,
     SACMODEL_REGISTRATION,
     SACMODEL_PARALLEL_PLANE,
-    SACMODEL_NORMAL_PARALLEL_PLANE
+    SACMODEL_NORMAL_PARALLEL_PLANE,
+    SACMODEL_STICK
   };
 }
 
 // Define the number of samples in SacModel needs
 typedef std::map<pcl::SacModel, unsigned int>::value_type SampleSizeModel;
 const static SampleSizeModel sample_size_pairs[] = {SampleSizeModel (pcl::SACMODEL_PLANE, 3),
-                                                    SampleSizeModel (pcl::SACMODEL_LINE,2),
+                                                    SampleSizeModel (pcl::SACMODEL_LINE, 2),
                                                     SampleSizeModel (pcl::SACMODEL_CIRCLE2D, 3),
                                                     //SampleSizeModel (pcl::SACMODEL_CIRCLE3D, 3),
                                                     SampleSizeModel (pcl::SACMODEL_SPHERE, 4),
@@ -73,12 +74,13 @@ const static SampleSizeModel sample_size_pairs[] = {SampleSizeModel (pcl::SACMOD
                                                     //SampleSizeModel (pcl::SACMODEL_CONE, 2),
                                                     //SampleSizeModel (pcl::SACMODEL_TORUS, 2),
                                                     //SampleSizeModel (pcl::PARALLEL_LINE, 2),
-                                                    //SampleSizeModel (pcl::PERPENDICULAR_LINE, 2),
+                                                    SampleSizeModel (pcl::SACMODEL_PERPENDICULAR_PLANE, 3),
                                                     //SampleSizeModel (pcl::PARALLEL_LINES, 2),
                                                     SampleSizeModel (pcl::SACMODEL_NORMAL_PLANE, 3),
                                                     SampleSizeModel (pcl::SACMODEL_REGISTRATION, 3),
                                                     SampleSizeModel (pcl::SACMODEL_PARALLEL_PLANE, 3),
-                                                    SampleSizeModel (pcl::SACMODEL_NORMAL_PARALLEL_PLANE, 3)};
+                                                    SampleSizeModel (pcl::SACMODEL_NORMAL_PARALLEL_PLANE, 3),
+                                                    SampleSizeModel (pcl::SACMODEL_STICK, 2)};
 
 namespace pcl
 {

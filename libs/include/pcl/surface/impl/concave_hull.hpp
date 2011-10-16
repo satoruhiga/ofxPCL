@@ -31,7 +31,7 @@
   *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   *  POSSIBILITY OF SUCH DAMAGE.
   *
-  * $Id: concave_hull.hpp 1527 2011-07-01 01:18:48Z rusu $
+  * $Id: concave_hull.hpp 2617 2011-09-30 21:37:23Z rusu $
   *
   */
 
@@ -41,10 +41,13 @@
 #ifndef PCL_SURFACE_IMPL_CONCAVE_HULL_H_
 #define PCL_SURFACE_IMPL_CONCAVE_HULL_H_
 
+#include <map>
 #include <pcl/surface/concave_hull.h>
 #include <pcl/common/common.h>
+#include <pcl/common/io.h>
+#include <pcl/common/eigen.h>
 #include <pcl/registration/transforms.h>
-
+#include <pcl/kdtree/kdtree_flann.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -76,6 +79,13 @@ template <typename PointInT> void
 pcl::ConcaveHull<PointInT>::reconstruct (PointCloud &output)
 {
   output.header = input_->header;
+  if (alpha_ <= 0)
+  {
+    PCL_ERROR ("[pcl::%s::reconstruct] Alpha parameter must be set to a positive number!\n", getClassName ().c_str ());
+    output.points.clear ();
+    return;
+  }
+
   if (!initCompute ())
   {
     output.points.clear ();
@@ -95,21 +105,28 @@ pcl::ConcaveHull<PointInT>::reconstruct (PointCloud &output)
 
 //////////////////////////////////////////////////////////////////////////
 template <typename PointInT> void
-pcl::ConcaveHull<PointInT>::reconstruct (PointCloud &points, std::vector<pcl::Vertices> &polygons)
+pcl::ConcaveHull<PointInT>::reconstruct (PointCloud &output, std::vector<pcl::Vertices> &polygons)
 {
-  points.header = input_->header;
+  output.header = input_->header;
+  if (alpha_ <= 0)
+  {
+    PCL_ERROR ("[pcl::%s::reconstruct] Alpha parameter must be set to a positive number!\n", getClassName ().c_str ());
+    output.points.clear ();
+    return;
+  }
+
   if (!initCompute ())
   {
-    points.points.clear ();
+    output.points.clear ();
     return;
   }
 
   // Perform the actual surface reconstruction
-  performReconstruction (points, polygons);
+  performReconstruction (output, polygons);
 
-  points.width = points.points.size ();
-  points.height = 1;
-  points.is_dense = true;
+  output.width = output.points.size ();
+  output.height = 1;
+  output.is_dense = true;
 
   deinitCompute ();
 }
@@ -188,7 +205,8 @@ pcl::ConcaveHull<PointInT>::performReconstruction (PointCloud &alpha_shape, std:
 
   if (exitcode != 0)
   {
-    PCL_ERROR ("[pcl::%s::performReconstrution] ERROR: qhull was unable to compute a concave hull for the given point cloud (%zu)!\n", getClassName ().c_str (), cloud_transformed.points.size ());
+    PCL_ERROR ("[pcl::%s::performReconstrution] ERROR: qhull was unable to compute a concave hull for the given point cloud (%lu)!\n", 
+               getClassName ().c_str (), (unsigned long) cloud_transformed.points.size ());
 
     //check if it fails because of NaN values...
     if (!cloud_transformed.is_dense)

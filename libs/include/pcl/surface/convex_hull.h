@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: convex_hull.h 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: convex_hull.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -43,9 +43,8 @@
 
 // PCL includes
 #include "pcl/pcl_base.h"
-#include "pcl/io/io.h"
+#include "pcl/common/io.h"
 
-#include "pcl/features/normal_3d.h"
 #include "pcl/ModelCoefficients.h"
 #include "pcl/PolygonMesh.h"
 #include <math.h>

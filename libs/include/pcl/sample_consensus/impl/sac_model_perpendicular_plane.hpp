@@ -31,7 +31,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: sac_model_perpendicular_plane.hpp 1370 2011-06-19 01:06:01Z jspricke $
+ * $Id: sac_model_perpendicular_plane.hpp 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -43,7 +43,7 @@
 //////////////////////////////////////////////////////////////////////////
 template <typename PointT> void
 pcl::SampleConsensusModelPerpendicularPlane<PointT>::selectWithinDistance (
-      const Eigen::VectorXf &model_coefficients, double threshold, std::vector<int> &inliers)
+      const Eigen::VectorXf &model_coefficients, const double threshold, std::vector<int> &inliers)
 {
   // Check if the model is valid given the user constraints
   if (!isModelValid (model_coefficients))
@@ -53,6 +53,18 @@ pcl::SampleConsensusModelPerpendicularPlane<PointT>::selectWithinDistance (
   }
 
   SampleConsensusModelPlane<PointT>::selectWithinDistance (model_coefficients, threshold, inliers);
+}
+
+//////////////////////////////////////////////////////////////////////////
+template <typename PointT> int
+pcl::SampleConsensusModelPerpendicularPlane<PointT>::countWithinDistance (
+      const Eigen::VectorXf &model_coefficients, const double threshold)
+{
+  // Check if the model is valid given the user constraints
+  if (!isModelValid (model_coefficients))
+    return (0);
+
+  return (SampleConsensusModelPlane<PointT>::countWithinDistance (model_coefficients, threshold));
 }
 
 //////////////////////////////////////////////////////////////////////////

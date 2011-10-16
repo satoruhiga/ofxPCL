@@ -1,7 +1,9 @@
 /*
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2009-2010, Willow Garage, Inc.
+ *  Point Cloud Library (PCL) - www.pointclouds.org
+ *  Copyright (c) 2010-2011, Willow Garage, Inc.
+ *
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,7 +33,7 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: sac_model_normal_plane.h 1717 2011-07-13 01:03:04Z rusu $
+ * $Id: sac_model_normal_plane.h 2617 2011-09-30 21:37:23Z rusu $
  *
  */
 
@@ -91,34 +93,47 @@ namespace pcl
       typedef boost::shared_ptr<SampleConsensusModelNormalPlane> Ptr;
 
       /** \brief Constructor for base SampleConsensusModelNormalPlane.
-        * \param cloud the input point cloud dataset
+        * \param[in] cloud the input point cloud dataset
         */
       SampleConsensusModelNormalPlane (const PointCloudConstPtr &cloud) : SampleConsensusModelPlane<PointT> (cloud)
       {
       }
 
       /** \brief Constructor for base SampleConsensusModelNormalPlane.
-        * \param cloud the input point cloud dataset
-        * \param indices a vector of point indices to be used from \a cloud
+        * \param[in] cloud the input point cloud dataset
+        * \param[in] indices a vector of point indices to be used from \a cloud
         */
       SampleConsensusModelNormalPlane (const PointCloudConstPtr &cloud, const std::vector<int> &indices) : SampleConsensusModelPlane<PointT> (cloud, indices)
       {
       }
 
       /** \brief Select all the points which respect the given model coefficients as inliers.
-        * \param model_coefficients the coefficients of a plane model that we need to compute distances to
-        * \param inliers the resultant model inliers
-        * \param threshold a maximum admissible distance threshold for determining the inliers from the outliers
+        * \param[in] model_coefficients the coefficients of a plane model that we need to compute distances to
+        * \param[in] threshold a maximum admissible distance threshold for determining the inliers from the outliers
+        * \param[out] inliers the resultant model inliers
         */
       void 
-      selectWithinDistance (const Eigen::VectorXf &model_coefficients, double threshold, std::vector<int> &inliers);
+      selectWithinDistance (const Eigen::VectorXf &model_coefficients, 
+                            const double threshold, 
+                            std::vector<int> &inliers);
+
+      /** \brief Count all the points which respect the given model coefficients as inliers. 
+        * 
+        * \param[in] model_coefficients the coefficients of a model that we need to compute distances to
+        * \param[in] threshold maximum admissible distance threshold for determining the inliers from the outliers
+        * \return the resultant number of inliers
+        */
+      virtual int
+      countWithinDistance (const Eigen::VectorXf &model_coefficients, 
+                           const double threshold);
 
       /** \brief Compute all distances from the cloud data to a given plane model.
-        * \param model_coefficients the coefficients of a plane model that we need to compute distances to
-        * \param distances the resultant estimated distances
+        * \param[in] model_coefficients the coefficients of a plane model that we need to compute distances to
+        * \param[out] distances the resultant estimated distances
         */
       void 
-      getDistancesToModel (const Eigen::VectorXf &model_coefficients, std::vector<double> &distances);
+      getDistancesToModel (const Eigen::VectorXf &model_coefficients, 
+                           std::vector<double> &distances);
 
       /** \brief Return an unique id for this model (SACMODEL_NORMAL_PLANE). */
       inline pcl::SacModel 
@@ -128,7 +143,7 @@ namespace pcl
 
     protected:
       /** \brief Check whether a model is valid given the user constraints.
-        * \param model_coefficients the set of model coefficients
+        * \param[in] model_coefficients the set of model coefficients
         */
       bool 
       isModelValid (const Eigen::VectorXf &model_coefficients);

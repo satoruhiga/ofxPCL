@@ -124,4 +124,64 @@ vector<PointCloudRef> segmentation(PointCloudRef cloud, const pcl::SacModel mode
 	return result;
 }
 
+// octree
+
+OctreeRef octree(PointCloudRef cloud, float resolution)
+{
+	OctreeRef o = OctreeRef(new Octree(resolution));
+	o->setInputCloud(cloud);
+	o->addPointsFromInputCloud();
+	return o;
+}
+
+vector<int> voxelSearch(OctreeRef octree, ofVec3f search_point)
+{
+	vector<int> result;
+	octree->voxelSearch(toPCL(search_point), result);
+	return result;
+}
+
+vector<IndexDistance> nearestKSearch(OctreeRef octree, ofVec3f search_point, int K)
+{
+	vector<IndexDistance> result;
+	vector<int> indexes;
+	vector<float> distances;
+
+	int n = octree->nearestKSearch(toPCL(search_point), K, indexes, distances);
+	result.resize(n);
+
+	for (int i = 0; i < n; i++)
+	{
+		result[i].index = indexes[i];
+		result[i].distance = distances[i];
+	}
+
+	return result;
+}
+
+IndexDistance approxNearestSearch(OctreeRef octree, ofVec3f search_point)
+{
+	IndexDistance result;
+	octree->approxNearestSearch(toPCL(search_point), result.index, result.distance);
+	return result;
+}
+
+vector<IndexDistance> radiusSearch(OctreeRef octree, ofVec3f search_point, float radius, int limit)
+{
+	vector<IndexDistance> result;
+	vector<int> indexes;
+	vector<float> distances;
+
+	int n = octree->radiusSearch(toPCL(search_point), radius, indexes, distances, limit);
+	result.resize(n);
+
+	for (int i = 0; i < n; i++)
+	{
+		result[i].index = indexes[i];
+		result[i].distance = distances[i];
+	}
+
+	return result;
+}
+
 }

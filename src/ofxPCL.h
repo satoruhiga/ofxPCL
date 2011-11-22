@@ -3,20 +3,27 @@
 #include "ofMain.h"
 
 #include <pcl/io/pcd_io.h>
-#include <pcl/point_types.h>
 
 // segmentation
 #include <pcl/sample_consensus/model_types.h>
 
-// octree
-#include <pcl/octree/octree.h>
+// downsample
+#include <pcl/filters/voxel_grid.h>
 
-// kdtree
-#include <pcl/kdtree/kdtree_flann.h>
+// segmentation
+#include <pcl/ModelCoefficients.h>
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/filters/extract_indices.h>
+
 
 // triangulate
 #include <pcl/features/normal_3d.h>
 #include <pcl/surface/gp3.h>
+
+#include "Types.h"
+#include "Utility.h"
+#include "Tree.h"
 
 namespace ofxPCL
 {
@@ -24,85 +31,136 @@ namespace ofxPCL
 //
 // pointcloud
 //
-	
-struct ofPointType
+
+template<typename T>
+T loadPointCloud(string path)
 {
-	ofVec3f point;
-	ofColor color;
-	
-	ofPointType() {}
-	ofPointType(const ofVec3f &p) : point(p), color(ofColor::white) {}
-	ofPointType(const ofVec3f &p, const ofColor &c) : point(p), color(c) {}
-};
+	T cloud(new typename T::value_type);
+	path = ofToDataPath(path);
 
-typedef pcl::PointXYZRGB PointType;
-	
-typedef pcl::PointCloud<PointType> PointCloud;
-typedef PointCloud::Ptr PointCloudRef;
-
-PointCloudRef loadPointCloud(string path);
-void savePointCloud(string path, PointCloudRef cloud);
-
-inline ofPointType toOF(const PointType& p) { return ofPointType(ofVec3f(p.x, p.y, p.z), ofColor(p.r, p.g, p.b)); }
-inline PointType toPCL(const ofVec3f& p)
-{
-	PointType r; 
-	r.x = p.x;
-	r.y = p.y;
-	r.z = p.z;
-	r.rgba = 0xFFFFFFFF;
-	return r;
+	if (pcl::io::loadPCDFile<T::PointType>(path.c_str(), *cloud) == -1)
+		ofLogError("Couldn't read file: " + path);
 }
-	
-inline PointType toPCL(const ofVec3f &p, const ofColor &c)
+
+template<typename T>
+void savePointCloud(string path, T cloud)
 {
-	PointType r; 
-	r.x = p.x;
-	r.y = p.y;
-	r.z = p.z;
-	r.rgba = c.getHex();
-	return r;
+	path = ofToDataPath(path);
+	pcl::io::savePCDFileASCII(path.c_str(), *cloud);
 }
-	
-inline PointType toPCL(const ofPointType& p) { return toPCL(p.point, p.color); }
 
-ofMesh toOF(PointCloudRef cloud);
-void toOF(PointCloudRef cloud, ofMesh& mesh);
-PointCloudRef toPCL(ofMesh &mesh);
-
-void downsample(PointCloudRef cloud, ofVec3f resolution = ofVec3f(1, 1, 1));
-
-vector<PointCloudRef> segmentation(PointCloudRef cloud, const pcl::SacModel model_type = pcl::SACMODEL_PLANE, const float distance_threshold = 1, const int min_points_limit = 10, const int max_segment_count = 30);
-
-//
-// octree
-//
-typedef pcl::octree::OctreePointCloud<PointType> Octree;
-typedef Octree::Ptr OctreeRef;
-
-struct IndexDistance
+template<typename T>
+inline void downsample(T cloud, ofVec3f resolution = ofVec3f(1, 1, 1))
 {
-	int index;
-	float distance;
-};
+	pcl::VoxelGrid<typename T::value_type::PointType> sor;
+	sor.setInputCloud(cloud);
+	sor.setLeafSize(resolution.x, resolution.y, resolution.z);
+	sor.filter(*cloud);
+}
 
-OctreeRef makeOctree(PointCloudRef cloud, float resolution = 1);
-vector<int> voxelSearch(OctreeRef octree, ofVec3f search_point);
-IndexDistance approxNearestSearch(OctreeRef octree, ofVec3f search_point);
-vector<IndexDistance> nearestKSearch(OctreeRef octree, ofVec3f search_point, int K);
-vector<IndexDistance> radiusSearch(OctreeRef octree, ofVec3f search_point, float radius, int limit = INT_MAX);
+template<typename T>
+inline vector<T> segmentation(T cloud, const pcl::SacModel model_type = pcl::SACMODEL_PLANE, const float distance_threshold = 1, const int min_points_limit = 10, const int max_segment_count = 30)
+{
+	pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients());
+	pcl::PointIndices::Ptr inliers(new pcl::PointIndices());
+
+	pcl::SACSegmentation<typename T::value_type::PointType> seg;
+	seg.setOptimizeCoefficients(false);
+
+	seg.setModelType(model_type);
+	seg.setMethodType(pcl::SAC_RANSAC);
+	seg.setDistanceThreshold(distance_threshold);
+	seg.setMaxIterations(500);
+
+	T temp(new typename T::value_type(*cloud));
+	const size_t original_szie = temp->points.size();
+
+	pcl::ExtractIndices<typename T::value_type::PointType> extract;
+	vector<T> result;
+
+	int segment_count = 0;
+	while (temp->size() > original_szie * 0.3)
+	{
+		if (segment_count > max_segment_count) break;
+		segment_count++;
+
+		seg.setInputCloud(temp);
+		seg.segment(*inliers, *coefficients);
+
+		if (inliers->indices.size() < min_points_limit)
+			break;
+
+		T filterd_point_cloud(new typename T::value_type);
+
+		extract.setInputCloud(temp);
+		extract.setIndices(inliers);
+		extract.setNegative(false);
+		extract.filter(*filterd_point_cloud);
+
+		if (filterd_point_cloud->points.size() > 0)
+		{
+			result.push_back(filterd_point_cloud);
+		}
+
+		extract.setNegative(true);
+		extract.filter(*temp);
+	}
+
+	return result;
+}
+
 
 //
-// KdTree
+// estimate normal
 //
-typedef pcl::KdTreeFLANN<PointType> KdTree;
-typedef KdTree::Ptr KdTreeRef;
-KdTreeRef makeKdTree(PointCloudRef cloud);
-	
+template<typename T>
+NormalPointCloudRef normalEstimation(const T &cloud)
+{
+	pcl::NormalEstimation<typename T::value_type::PointType, NormalType> n;
+	NormalPointCloudRef normals(new NormalPointCloud);
+
+	KdTree<typename T::value_type::PointType> kdtree(cloud);
+
+	n.setInputCloud(cloud);
+	n.setSearchMethod(kdtree.kdtree);
+	n.setKSearch(20);
+	n.compute(*normals);
+
+	return normals;
+}
+
+
 //
 // triangulate
 //
-void triangulate(PointCloudRef cloud);
-	
+template<typename T>
+void triangulate(T cloud)
+{
+	NormalPointCloudRef normals = normalEstimation(cloud);
+
+	NormalPointCloudRef cloud_with_normals(new NormalPointCloud);
+	pcl::concatenateFields(*cloud, *normals, *cloud_with_normals);
+
+	pcl::KdTreeFLANN<NormalType>::Ptr tree2(new pcl::KdTreeFLANN<NormalType>);
+	tree2->setInputCloud(cloud_with_normals);
+
+	pcl::GreedyProjectionTriangulation<NormalType> gp3;
+	pcl::PolygonMesh triangles;
+
+	gp3.setSearchRadius(0.025);
+	gp3.setMu(2.5);
+	gp3.setMaximumNearestNeighbors(100);
+	gp3.setMaximumSurfaceAngle(M_PI / 4); // 45 degrees
+	gp3.setMinimumAngle(M_PI / 18); // 10 degrees
+	gp3.setMaximumAngle(2 * M_PI / 3); // 120 degrees
+	gp3.setNormalConsistency(false);
+
+	gp3.setInputCloud(cloud_with_normals);
+	gp3.setSearchMethod(tree2);
+	gp3.reconstruct(triangles);
+
+	std::vector<int> parts = gp3.getPartIDs();
+	std::vector<int> states = gp3.getPointStates();
 }
 
+}

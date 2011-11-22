@@ -24,7 +24,13 @@
 // triangulate
 #include <pcl/features/normal_3d.h>
 #include <pcl/surface/gp3.h>
+#include <pcl/surface/grid_projection.h>
 #include <pcl/Vertices.h>
+
+// mls
+#include <pcl/surface/mls.h>
+#include <pcl/io/pcd_io.h>
+
 
 namespace ofxPCL
 {
@@ -117,47 +123,75 @@ inline vector<T> segmentation(T cloud, const pcl::SacModel model_type = pcl::SAC
 
 
 //
-// estimate normal
+// normal estimation
 //
-template<typename T>
-inline NormalPointCloud normalEstimation(const T &cloud)
+template<typename T1, typename T2>
+inline void normalEstimation(const T1 &cloud, T2 &output_cloud_with_normals)
 {
-	pcl::NormalEstimation<typename T::value_type::PointType, NormalType> n;
+	pcl::NormalEstimation<typename T1::value_type::PointType, NormalType> n;
 	NormalPointCloud normals(new typename NormalPointCloud::value_type);
 
-	KdTree<typename T::value_type::PointType> kdtree(cloud);
+	KdTree<typename T1::value_type::PointType> kdtree(cloud);
 
 	n.setInputCloud(cloud);
 	n.setSearchMethod(kdtree.kdtree);
 	n.setKSearch(20);
 	n.compute(*normals);
 
-	return normals;
+	output_cloud_with_normals = T2(new typename T2::value_type);
+	pcl::concatenateFields(*cloud, *normals, *output_cloud_with_normals);
 }
 
 
 //
+// MLS
+//
+template<typename T1, typename T2>
+void movingLeastSquares(const T1 &cloud, T2 &output_cloud_with_normals, float search_radius = 30)
+{
+	boost::shared_ptr<vector<int> > indices(new vector<int>);
+	indices->resize(cloud->points.size());
+	for (size_t i = 0; i < indices->size(); ++i)
+	{
+		(*indices)[i] = i;
+	}
+
+	pcl::PointCloud<typename T1::value_type::PointType> mls_points;
+	NormalPointCloud mls_normals(new NormalPointCloud::value_type);
+	pcl::MovingLeastSquares<ColorPointType, NormalType> mls;
+
+	KdTree<typename T1::value_type::PointType> kdtree(cloud);
+
+	// Set parameters
+	mls.setInputCloud(cloud);
+	mls.setIndices(indices);
+	mls.setPolynomialFit(true);
+	mls.setSearchMethod(kdtree.kdtree);
+	mls.setSearchRadius(search_radius);
+
+	// Reconstruct
+	mls.setOutputNormals(mls_normals);
+	mls.reconstruct(mls_points);
+
+	output_cloud_with_normals = T2(new typename T2::value_type);
+	pcl::concatenateFields(mls_points, *mls_normals, *output_cloud_with_normals);
+}
+
+//
 // triangulate
 //
-template<typename T> ofMesh triangulate(const T &cloud, float searchRadius = 30);
-
-template<>
-inline ofMesh triangulate(const ColorPointCloud &cloud, float searchRadius)
+template<typename T>
+ofMesh triangulate(const T &cloud_with_normals, float search_radius = 30)
 {
-	NormalPointCloud normals = normalEstimation(cloud);
+	typename pcl::KdTreeFLANN<typename T::value_type::PointType>::Ptr tree(new pcl::KdTreeFLANN<typename T::value_type::PointType>);
+	tree->setInputCloud(cloud_with_normals);
 
-	ColorNormalPointCloud cloud_with_normals(new ColorNormalPointCloud::value_type);
-	pcl::concatenateFields(*cloud, *normals, *cloud_with_normals);
-
-	pcl::KdTreeFLANN<ColorNormalPointType>::Ptr tree2(new pcl::KdTreeFLANN<ColorNormalPointType>);
-	tree2->setInputCloud(cloud_with_normals);
-
-	pcl::GreedyProjectionTriangulation<ColorNormalPointType> gp3;
+	typename pcl::GreedyProjectionTriangulation<typename T::value_type::PointType> gp3;
 	pcl::PolygonMesh triangles;
 
 	// Set the maximum distance between connected points (maximum edge length)
-	gp3.setSearchRadius(searchRadius);
-	
+	gp3.setSearchRadius(search_radius);
+
 	gp3.setMu(2.5);
 	gp3.setMaximumNearestNeighbors(100);
 	gp3.setMaximumSurfaceAngle(M_PI / 4); // 45 degrees
@@ -166,20 +200,58 @@ inline ofMesh triangulate(const ColorPointCloud &cloud, float searchRadius)
 	gp3.setNormalConsistency(false);
 
 	gp3.setInputCloud(cloud_with_normals);
-	gp3.setSearchMethod(tree2);
+	gp3.setSearchMethod(tree);
 	gp3.reconstruct(triangles);
-	
+
 	ofMesh mesh;
 	convert(cloud_with_normals, mesh);
-	
+
 	for (int i = 0; i < triangles.polygons.size(); i++)
 	{
 		pcl::Vertices &v = triangles.polygons[i];
-		
+
 		if (v.vertices.size() == 3)
 			mesh.addTriangle(v.vertices[0], v.vertices[1], v.vertices[2]);
 	}
-	
+
+	return mesh;
+}
+
+//
+// GridProjection # dosen't workz...?
+//
+template<typename T>
+ofMesh gridProjection(const T &cloud_with_normals, float resolution = 1, int padding_size = 3)
+{
+	typename pcl::KdTreeFLANN<typename T::value_type::PointType>::Ptr tree(new pcl::KdTreeFLANN<typename T::value_type::PointType>);
+	tree->setInputCloud(cloud_with_normals);
+
+	pcl::GridProjection<typename T::value_type::PointType> gp;
+	pcl::PolygonMesh triangles;
+
+	gp.setResolution(resolution);
+	gp.setPaddingSize(padding_size);
+	gp.setNearestNeighborNum(10);
+
+	// Get result
+	gp.setInputCloud(cloud_with_normals);
+	gp.setSearchMethod(tree);
+	gp.reconstruct(triangles);
+
+	ofMesh mesh;
+	convert(cloud_with_normals, mesh);
+
+	for (int i = 0; i < triangles.polygons.size(); i++)
+	{
+		pcl::Vertices &v = triangles.polygons[i];
+
+		if (v.vertices.size() == 4)
+		{
+			mesh.addTriangle(v.vertices[0], v.vertices[1], v.vertices[2]);
+			mesh.addTriangle(v.vertices[2], v.vertices[3], v.vertices[0]);
+		}
+	}
+
 	return mesh;
 }
 

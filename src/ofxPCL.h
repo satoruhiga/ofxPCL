@@ -2,6 +2,11 @@
 
 #include "ofMain.h"
 
+#include "Types.h"
+#include "Utility.h"
+#include "Tree.h"
+
+// file io
 #include <pcl/io/pcd_io.h>
 
 // segmentation
@@ -16,22 +21,18 @@
 #include <pcl/sample_consensus/method_types.h>
 #include <pcl/filters/extract_indices.h>
 
-
 // triangulate
 #include <pcl/features/normal_3d.h>
 #include <pcl/surface/gp3.h>
-
-#include "Types.h"
-#include "Utility.h"
-#include "Tree.h"
+#include <pcl/Vertices.h>
 
 namespace ofxPCL
 {
 
 //
-// pointcloud
+// file io
 //
-template <typename T>
+template<typename T>
 inline T loadPointCloud(string path)
 {
 	T cloud(new typename T::value_type);
@@ -41,14 +42,17 @@ inline T loadPointCloud(string path)
 		ofLogError("Couldn't read file: " + path);
 }
 
-template <typename T>
+template<typename T>
 inline void savePointCloud(string path, T cloud)
 {
 	path = ofToDataPath(path);
 	pcl::io::savePCDFileASCII(path.c_str(), *cloud);
 }
 
-template <typename T>
+//
+// downsample
+//
+template<typename T>
 inline void downsample(T cloud, ofVec3f resolution = ofVec3f(1, 1, 1))
 {
 	pcl::VoxelGrid<typename T::value_type::PointType> sor;
@@ -57,7 +61,10 @@ inline void downsample(T cloud, ofVec3f resolution = ofVec3f(1, 1, 1))
 	sor.filter(*cloud);
 }
 
-template <typename T>
+//
+// segmentation
+//
+template<typename T>
 inline vector<T> segmentation(T cloud, const pcl::SacModel model_type = pcl::SACMODEL_PLANE, const float distance_threshold = 1, const int min_points_limit = 10, const int max_segment_count = 30)
 {
 	pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients());
@@ -132,21 +139,25 @@ inline NormalPointCloud normalEstimation(const T &cloud)
 //
 // triangulate
 //
-template<typename T>
-inline void triangulate(T cloud)
+template<typename T> ofMesh triangulate(const T &cloud, float searchRadius = 30);
+
+template<>
+inline ofMesh triangulate(const ColorPointCloud &cloud, float searchRadius)
 {
 	NormalPointCloud normals = normalEstimation(cloud);
 
-	NormalPointCloud cloud_with_normals(new NormalPointCloud::value_type);
+	ColorNormalPointCloud cloud_with_normals(new ColorNormalPointCloud::value_type);
 	pcl::concatenateFields(*cloud, *normals, *cloud_with_normals);
 
-	pcl::KdTreeFLANN<NormalType>::Ptr tree2(new pcl::KdTreeFLANN<NormalType>);
+	pcl::KdTreeFLANN<ColorNormalPointType>::Ptr tree2(new pcl::KdTreeFLANN<ColorNormalPointType>);
 	tree2->setInputCloud(cloud_with_normals);
 
-	pcl::GreedyProjectionTriangulation<NormalType> gp3;
+	pcl::GreedyProjectionTriangulation<ColorNormalPointType> gp3;
 	pcl::PolygonMesh triangles;
 
-	gp3.setSearchRadius(0.025);
+	// Set the maximum distance between connected points (maximum edge length)
+	gp3.setSearchRadius(searchRadius);
+	
 	gp3.setMu(2.5);
 	gp3.setMaximumNearestNeighbors(100);
 	gp3.setMaximumSurfaceAngle(M_PI / 4); // 45 degrees
@@ -157,9 +168,19 @@ inline void triangulate(T cloud)
 	gp3.setInputCloud(cloud_with_normals);
 	gp3.setSearchMethod(tree2);
 	gp3.reconstruct(triangles);
-
-	std::vector<int> parts = gp3.getPartIDs();
-	std::vector<int> states = gp3.getPointStates();
+	
+	ofMesh mesh;
+	convert(cloud_with_normals, mesh);
+	
+	for (int i = 0; i < triangles.polygons.size(); i++)
+	{
+		pcl::Vertices &v = triangles.polygons[i];
+		
+		if (v.vertices.size() == 3)
+			mesh.addTriangle(v.vertices[0], v.vertices[1], v.vertices[2]);
+	}
+	
+	return mesh;
 }
 
 }

@@ -125,7 +125,7 @@ public:
 
 	KdTree() {}
 
-	KdTree(const pcl::PointCloud<T> &cloud)
+	KdTree(const typename pcl::PointCloud<T>::Ptr &cloud)
 	{
 		kdtree = Ref(new KdTreeType);
 		kdtree->setInputCloud(cloud);

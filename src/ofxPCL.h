@@ -11,21 +11,60 @@
 // octree
 #include <pcl/octree/octree.h>
 
+// kdtree
+#include <pcl/kdtree/kdtree_flann.h>
+
+// triangulate
+#include <pcl/features/normal_3d.h>
+#include <pcl/surface/gp3.h>
+
 namespace ofxPCL
 {
 
 //
 // pointcloud
 //
-typedef pcl::PointXYZ PointType;
+	
+struct ofPointType
+{
+	ofVec3f point;
+	ofColor color;
+	
+	ofPointType() {}
+	ofPointType(const ofVec3f &p) : point(p), color(ofColor::white) {}
+	ofPointType(const ofVec3f &p, const ofColor &c) : point(p), color(c) {}
+};
+
+typedef pcl::PointXYZRGB PointType;
+	
 typedef pcl::PointCloud<PointType> PointCloud;
 typedef PointCloud::Ptr PointCloudRef;
 
 PointCloudRef loadPointCloud(string path);
 void savePointCloud(string path, PointCloudRef cloud);
 
-inline ofVec3f toOF(const PointType& p) { return ofVec3f(p.x, p.y, p.z); }
-inline PointType toPCL(ofVec3f p) { return PointType(p.x, p.y, p.z); }
+inline ofPointType toOF(const PointType& p) { return ofPointType(ofVec3f(p.x, p.y, p.z), ofColor(p.r, p.g, p.b)); }
+inline PointType toPCL(const ofVec3f& p)
+{
+	PointType r; 
+	r.x = p.x;
+	r.y = p.y;
+	r.z = p.z;
+	r.rgba = 0xFFFFFFFF;
+	return r;
+}
+	
+inline PointType toPCL(const ofVec3f &p, const ofColor &c)
+{
+	PointType r; 
+	r.x = p.x;
+	r.y = p.y;
+	r.z = p.z;
+	r.rgba = c.getHex();
+	return r;
+}
+	
+inline PointType toPCL(const ofPointType& p) { return toPCL(p.point, p.color); }
 
 ofMesh toOF(PointCloudRef cloud);
 void toOF(PointCloudRef cloud, ofMesh& mesh);
@@ -47,10 +86,23 @@ struct IndexDistance
 	float distance;
 };
 
-OctreeRef octree(PointCloudRef cloud, float resolution = 1);
+OctreeRef makeOctree(PointCloudRef cloud, float resolution = 1);
 vector<int> voxelSearch(OctreeRef octree, ofVec3f search_point);
 IndexDistance approxNearestSearch(OctreeRef octree, ofVec3f search_point);
 vector<IndexDistance> nearestKSearch(OctreeRef octree, ofVec3f search_point, int K);
 vector<IndexDistance> radiusSearch(OctreeRef octree, ofVec3f search_point, float radius, int limit = INT_MAX);
 
+//
+// KdTree
+//
+typedef pcl::KdTreeFLANN<PointType> KdTree;
+typedef KdTree::Ptr KdTreeRef;
+KdTreeRef makeKdTree(PointCloudRef cloud);
+	
+//
+// triangulate
+//
+void triangulate(PointCloudRef cloud);
+	
 }
+

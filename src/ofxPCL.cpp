@@ -38,7 +38,9 @@ void toOF(PointCloudRef cloud, ofMesh& mesh)
 	const size_t num_point = cloud->points.size();
 	for (int i = 0; i < num_point; i++)
 	{
-		mesh.addVertex(toOF(cloud->points[i]));
+		const ofPointType p = toOF(cloud->points[i]);
+		mesh.addColor(p.color);
+		mesh.addVertex(p.point);
 	}
 }
 
@@ -60,7 +62,7 @@ PointCloudRef toPCL(ofMesh &mesh)
 
 	for (int i = 0; i < num_point; i++)
 	{
-		cloud->points[i] = toPCL(mesh.getVertex(i));
+		cloud->points[i] = toPCL(mesh.getVertex(i), mesh.getColor(i));
 	}
 
 	return cloud;
@@ -79,7 +81,7 @@ vector<PointCloudRef> segmentation(PointCloudRef cloud, const pcl::SacModel mode
 	pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients());
 	pcl::PointIndices::Ptr inliers(new pcl::PointIndices());
 
-	pcl::SACSegmentation<pcl::PointXYZ> seg;
+	pcl::SACSegmentation<PointType> seg;
 	seg.setOptimizeCoefficients(false);
 
 	seg.setModelType(model_type);
@@ -126,7 +128,7 @@ vector<PointCloudRef> segmentation(PointCloudRef cloud, const pcl::SacModel mode
 
 // octree
 
-OctreeRef octree(PointCloudRef cloud, float resolution)
+OctreeRef makeOctree(PointCloudRef cloud, float resolution)
 {
 	OctreeRef o = OctreeRef(new Octree(resolution));
 	o->setInputCloud(cloud);
@@ -183,5 +185,51 @@ vector<IndexDistance> radiusSearch(OctreeRef octree, ofVec3f search_point, float
 
 	return result;
 }
+	
+KdTreeRef makeKdTree(PointCloudRef cloud)
+{
+	KdTreeRef tree(new KdTree);
+	tree->setInputCloud(cloud);
+	return tree;
+}
 
+void triangulate(PointCloudRef cloud)
+{
+	// Normal estimation*
+	pcl::NormalEstimation<PointType, pcl::Normal> n;
+	pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
+	
+	KdTreeRef tree = makeKdTree(cloud);
+	
+	n.setInputCloud(cloud);
+	n.setSearchMethod(tree);
+	n.setKSearch(20);
+	n.compute(*normals);
+	
+	pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud_with_normals(new pcl::PointCloud<pcl::PointXYZRGBNormal>);
+	pcl::concatenateFields(*cloud, *normals, *cloud_with_normals);
+	
+	pcl::KdTreeFLANN<pcl::PointXYZRGBNormal>::Ptr tree2(new pcl::KdTreeFLANN<pcl::PointXYZRGBNormal>);
+	tree2->setInputCloud(cloud_with_normals);
+	
+	pcl::GreedyProjectionTriangulation<pcl::PointXYZRGBNormal> gp3;
+	pcl::PolygonMesh triangles;
+	
+	gp3.setSearchRadius(0.025);
+	gp3.setMu (2.5);
+	gp3.setMaximumNearestNeighbors (100);
+	gp3.setMaximumSurfaceAngle(M_PI/4); // 45 degrees
+	gp3.setMinimumAngle(M_PI/18); // 10 degrees
+	gp3.setMaximumAngle(2*M_PI/3); // 120 degrees
+	gp3.setNormalConsistency(false);
+	
+	gp3.setInputCloud(cloud_with_normals);
+	gp3.setSearchMethod (tree2);
+	gp3.reconstruct (triangles);
+	
+	// Additional vertex information
+	std::vector<int> parts = gp3.getPartIDs();
+	std::vector<int> states = gp3.getPointStates();
+}
+	
 }

@@ -6,23 +6,18 @@ namespace ofxPCL
 {
 
 typedef pcl::PointXYZ PointType;
-typedef pcl::PointCloud<PointType> PointCloud;
-typedef PointCloud::Ptr PointCloudRef;
+typedef pcl::PointCloud<PointType>::Ptr PointCloud;
 	
 typedef pcl::PointXYZRGB ColorPointType;
-typedef pcl::PointCloud<ColorPointType> ColorPointCloud;
-typedef ColorPointCloud::Ptr ColorPointCloudRef;
+typedef pcl::PointCloud<ColorPointType>::Ptr ColorPointCloud;
 
 typedef pcl::Normal NormalType;
-typedef pcl::PointCloud<NormalType> NormalPointCloud;
-typedef NormalPointCloud::Ptr NormalPointCloudRef;
+typedef pcl::PointCloud<NormalType>::Ptr NormalPointCloud;
 
 typedef pcl::PointNormal PointNormalType;
-typedef pcl::PointCloud<PointNormalType> PointNormalPointCloud;
-typedef PointNormalPointCloud::Ptr PointNormalPointCloudRef;
+typedef pcl::PointCloud<PointNormalType>::Ptr PointNormalPointCloud;
 	
 typedef pcl::PointXYZRGBNormal ColorNormalPointType;
-typedef pcl::PointCloud<ColorNormalPointType> ColorNormalPointCloud;
-typedef ColorNormalPointCloud::Ptr ColorNormalPointCloudRef;
+typedef pcl::PointCloud<ColorNormalPointType>::Ptr ColorNormalPointCloud;
 
 }

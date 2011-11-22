@@ -11,7 +11,7 @@ namespace ofxPCL
 	template <class T1, class T2> void convert(const T1&, T2&);
 	
 	template<>
-	inline void convert(const PointCloudRef& cloud, ofMesh& mesh)
+	inline void convert(const PointCloud& cloud, ofMesh& mesh)
 	{
 		const size_t num_point = cloud->points.size();
 		for (int i = 0; i < num_point; i++)
@@ -22,7 +22,7 @@ namespace ofxPCL
 	}
 	
 	template<>
-	inline void convert(const ColorPointCloudRef& cloud, ofMesh& mesh)
+	inline void convert(const ColorPointCloud& cloud, ofMesh& mesh)
 	{
 		float inv_byte = 1. / 255.;
 		const size_t num_point = cloud->points.size();
@@ -35,7 +35,7 @@ namespace ofxPCL
 	}
 	
 	template<>
-	inline void convert(const ColorNormalPointCloudRef& cloud, ofMesh& mesh)
+	inline void convert(const ColorNormalPointCloud& cloud, ofMesh& mesh)
 	{
 		float inv_byte = 1. / 255.;
 		const size_t num_point = cloud->points.size();
@@ -49,7 +49,7 @@ namespace ofxPCL
 	}
 	
 	template<>
-	inline void convert(const ofMesh& mesh, PointCloudRef& cloud)
+	inline void convert(const ofMesh& mesh, PointCloud& cloud)
 	{
 		const size_t num_point = mesh.getNumVertices();
 		
@@ -68,7 +68,7 @@ namespace ofxPCL
 	}
 
 	template<>
-	inline void convert(const ofMesh& mesh, ColorPointCloudRef& cloud)
+	inline void convert(const ofMesh& mesh, ColorPointCloud& cloud)
 	{
 		const size_t num_point = mesh.getNumVertices();
 		
@@ -91,7 +91,7 @@ namespace ofxPCL
 	}
 	
 	template<>
-	inline void convert(const ofMesh& mesh, ColorNormalPointCloudRef& cloud)
+	inline void convert(const ofMesh& mesh, ColorNormalPointCloud& cloud)
 	{
 		const size_t num_point = mesh.getNumVertices();
 		
@@ -117,21 +117,21 @@ namespace ofxPCL
 		}
 	}
 	
-	inline ofMesh toOF(const PointCloudRef cloud)
+	inline ofMesh toOF(const PointCloud cloud)
 	{
 		ofMesh mesh;
 		convert(cloud, mesh);
 		return mesh;
 	}
 	
-	inline ofMesh toOF(const ColorPointCloudRef cloud)
+	inline ofMesh toOF(const ColorPointCloud cloud)
 	{
 		ofMesh mesh;
 		convert(cloud, mesh);
 		return mesh;
 	}
 	
-	inline ofMesh toOF(const ColorNormalPointCloudRef cloud)
+	inline ofMesh toOF(const ColorNormalPointCloud cloud)
 	{
 		ofMesh mesh;
 		convert(cloud, mesh);
@@ -141,25 +141,25 @@ namespace ofxPCL
 	template<class T> T toPCL(const ofMesh &mesh);
 	
 	template<>
-	inline PointCloudRef toPCL(const ofMesh &mesh)
+	inline PointCloud toPCL(const ofMesh &mesh)
 	{
-		PointCloudRef cloud(new PointCloud);
+		PointCloud cloud(new PointCloud::value_type);
 		convert(mesh, cloud);
 		return cloud;
 	}
 	
 	template<>
-	inline ColorPointCloudRef toPCL(const ofMesh &mesh)
+	inline ColorPointCloud toPCL(const ofMesh &mesh)
 	{
-		ColorPointCloudRef cloud(new ColorPointCloud);
+		ColorPointCloud cloud(new ColorPointCloud::value_type);
 		convert(mesh, cloud);
 		return cloud;
 	}
 	
 	template<>
-	inline ColorNormalPointCloudRef toPCL(const ofMesh &mesh)
+	inline ColorNormalPointCloud toPCL(const ofMesh &mesh)
 	{
-		ColorNormalPointCloudRef cloud(new ColorNormalPointCloud);
+		ColorNormalPointCloud cloud(new ColorNormalPointCloud::value_type);
 		convert(mesh, cloud);
 		return cloud;
 	}

@@ -31,9 +31,8 @@ namespace ofxPCL
 //
 // pointcloud
 //
-
-template<typename T>
-T loadPointCloud(string path)
+template <typename T>
+inline T loadPointCloud(string path)
 {
 	T cloud(new typename T::value_type);
 	path = ofToDataPath(path);
@@ -42,14 +41,14 @@ T loadPointCloud(string path)
 		ofLogError("Couldn't read file: " + path);
 }
 
-template<typename T>
-void savePointCloud(string path, T cloud)
+template <typename T>
+inline void savePointCloud(string path, T cloud)
 {
 	path = ofToDataPath(path);
 	pcl::io::savePCDFileASCII(path.c_str(), *cloud);
 }
 
-template<typename T>
+template <typename T>
 inline void downsample(T cloud, ofVec3f resolution = ofVec3f(1, 1, 1))
 {
 	pcl::VoxelGrid<typename T::value_type::PointType> sor;
@@ -58,7 +57,7 @@ inline void downsample(T cloud, ofVec3f resolution = ofVec3f(1, 1, 1))
 	sor.filter(*cloud);
 }
 
-template<typename T>
+template <typename T>
 inline vector<T> segmentation(T cloud, const pcl::SacModel model_type = pcl::SACMODEL_PLANE, const float distance_threshold = 1, const int min_points_limit = 10, const int max_segment_count = 30)
 {
 	pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients());
@@ -114,10 +113,10 @@ inline vector<T> segmentation(T cloud, const pcl::SacModel model_type = pcl::SAC
 // estimate normal
 //
 template<typename T>
-NormalPointCloudRef normalEstimation(const T &cloud)
+inline NormalPointCloud normalEstimation(const T &cloud)
 {
 	pcl::NormalEstimation<typename T::value_type::PointType, NormalType> n;
-	NormalPointCloudRef normals(new NormalPointCloud);
+	NormalPointCloud normals(new typename NormalPointCloud::value_type);
 
 	KdTree<typename T::value_type::PointType> kdtree(cloud);
 
@@ -134,11 +133,11 @@ NormalPointCloudRef normalEstimation(const T &cloud)
 // triangulate
 //
 template<typename T>
-void triangulate(T cloud)
+inline void triangulate(T cloud)
 {
-	NormalPointCloudRef normals = normalEstimation(cloud);
+	NormalPointCloud normals = normalEstimation(cloud);
 
-	NormalPointCloudRef cloud_with_normals(new NormalPointCloud);
+	NormalPointCloud cloud_with_normals(new NormalPointCloud::value_type);
 	pcl::concatenateFields(*cloud, *normals, *cloud_with_normals);
 
 	pcl::KdTreeFLANN<NormalType>::Ptr tree2(new pcl::KdTreeFLANN<NormalType>);

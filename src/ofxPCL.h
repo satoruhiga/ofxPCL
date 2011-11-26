@@ -9,6 +9,12 @@
 // file io
 #include <pcl/io/pcd_io.h>
 
+// transform
+#include <pcl/common/transforms.h>
+
+// thresold
+#include <pcl/filters/passthrough.h>
+
 // segmentation
 #include <pcl/sample_consensus/model_types.h>
 
@@ -31,34 +37,59 @@
 #include <pcl/surface/mls.h>
 #include <pcl/io/pcd_io.h>
 
-
 namespace ofxPCL
 {
 
 //
 // file io
 //
-template<typename T>
+template <typename T>
 inline T loadPointCloud(string path)
 {
 	T cloud(new typename T::value_type);
 	path = ofToDataPath(path);
 
-	if (pcl::io::loadPCDFile<T::PointType>(path.c_str(), *cloud) == -1)
+	if (pcl::io::loadPCDFile<typename T::value_type::PointType>(path.c_str(), *cloud) == -1)
 		ofLogError("Couldn't read file: " + path);
+
+	return cloud;
 }
 
-template<typename T>
+template <typename T>
 inline void savePointCloud(string path, T cloud)
 {
 	path = ofToDataPath(path);
-	pcl::io::savePCDFileASCII(path.c_str(), *cloud);
+	pcl::io::savePCDFileBinary(path.c_str(), *cloud);
+}
+
+//
+// transform
+//
+template <typename T>
+void transform(T cloud, ofMatrix4x4 matrix)
+{
+	Eigen::Matrix4f mat;
+	memcpy(&mat, matrix.getPtr(), sizeof(float) * 16);
+	pcl::transformPointCloud(*cloud, *cloud, mat);
+}
+
+//
+// threshold
+//
+template <typename T>
+inline void threshold(T cloud, const char *dimension, float min, float max)
+{
+	pcl::PassThrough<typename T::value_type::PointType> pass;
+	pass.setInputCloud(cloud);
+	pass.setFilterFieldName(dimension);
+	pass.setFilterLimits(min, max);
+	pass.filter(*cloud);
 }
 
 //
 // downsample
 //
-template<typename T>
+template <typename T>
 inline void downsample(T cloud, ofVec3f resolution = ofVec3f(1, 1, 1))
 {
 	pcl::VoxelGrid<typename T::value_type::PointType> sor;
@@ -70,7 +101,7 @@ inline void downsample(T cloud, ofVec3f resolution = ofVec3f(1, 1, 1))
 //
 // segmentation
 //
-template<typename T>
+template <typename T>
 inline vector<T> segmentation(T cloud, const pcl::SacModel model_type = pcl::SACMODEL_PLANE, const float distance_threshold = 1, const int min_points_limit = 10, const int max_segment_count = 30)
 {
 	pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients());
@@ -121,11 +152,10 @@ inline vector<T> segmentation(T cloud, const pcl::SacModel model_type = pcl::SAC
 	return result;
 }
 
-
 //
 // normal estimation
 //
-template<typename T1, typename T2>
+template <typename T1, typename T2>
 inline void normalEstimation(const T1 &cloud, T2 &output_cloud_with_normals)
 {
 	pcl::NormalEstimation<typename T1::value_type::PointType, NormalType> n;
@@ -142,11 +172,10 @@ inline void normalEstimation(const T1 &cloud, T2 &output_cloud_with_normals)
 	pcl::concatenateFields(*cloud, *normals, *output_cloud_with_normals);
 }
 
-
 //
 // MLS
 //
-template<typename T1, typename T2>
+template <typename T1, typename T2>
 void movingLeastSquares(const T1 &cloud, T2 &output_cloud_with_normals, float search_radius = 30)
 {
 	boost::shared_ptr<vector<int> > indices(new vector<int>);
@@ -180,7 +209,7 @@ void movingLeastSquares(const T1 &cloud, T2 &output_cloud_with_normals, float se
 //
 // triangulate
 //
-template<typename T>
+template <typename T>
 ofMesh triangulate(const T &cloud_with_normals, float search_radius = 30)
 {
 	typename pcl::KdTreeFLANN<typename T::value_type::PointType>::Ptr tree(new pcl::KdTreeFLANN<typename T::value_type::PointType>);
@@ -220,7 +249,7 @@ ofMesh triangulate(const T &cloud_with_normals, float search_radius = 30)
 //
 // GridProjection # dosen't workz...?
 //
-template<typename T>
+template <typename T>
 ofMesh gridProjection(const T &cloud_with_normals, float resolution = 1, int padding_size = 3)
 {
 	typename pcl::KdTreeFLANN<typename T::value_type::PointType>::Ptr tree(new pcl::KdTreeFLANN<typename T::value_type::PointType>);

@@ -58,10 +58,9 @@ inline void convert(const ColorNormalPointCloud& cloud, ofMesh& mesh)
 	}
 }
 
-template <>
-inline void convert(const ofMesh& mesh, PointCloud& cloud)
+inline void convert(const vector<ofVec3f> &points, PointCloud& cloud)
 {
-	const size_t num_point = mesh.getNumVertices();
+	const size_t num_point = points.size();
 
 	cloud->width = num_point;
 	cloud->height = 1;
@@ -70,17 +69,18 @@ inline void convert(const ofMesh& mesh, PointCloud& cloud)
 	for (int i = 0; i < num_point; i++)
 	{
 		PointType &p = cloud->points[i];
-		const ofVec3f &o = mesh.getVerticesPointer()[i];
+		const ofVec3f &o = points[i];
 		p.x = o.x;
 		p.y = o.y;
 		p.z = o.z;
 	}
 }
 
-template <>
-inline void convert(const ofMesh& mesh, ColorPointCloud& cloud)
+inline void convert(const vector<ofVec3f> &points,
+					const vector<ofFloatColor> &colors,
+					ColorPointCloud &cloud)
 {
-	const size_t num_point = mesh.getNumVertices();
+	const size_t num_point = points.size();
 
 	cloud->width = num_point;
 	cloud->height = 1;
@@ -89,8 +89,8 @@ inline void convert(const ofMesh& mesh, ColorPointCloud& cloud)
 	for (int i = 0; i < num_point; i++)
 	{
 		ColorPointType &p = cloud->points[i];
-		const ofVec3f &o = mesh.getVerticesPointer()[i];
-		const ofFloatColor &c = mesh.getColorsPointer()[i];
+		const ofVec3f &o = points[i];
+		const ofFloatColor &c = colors[i];
 		p.x = o.x;
 		p.y = o.y;
 		p.z = o.z;
@@ -100,10 +100,12 @@ inline void convert(const ofMesh& mesh, ColorPointCloud& cloud)
 	}
 }
 
-template <>
-inline void convert(const ofMesh& mesh, ColorNormalPointCloud& cloud)
+inline void convert(const vector<ofVec3f> &points,
+					const vector<ofFloatColor> &colors,
+					const vector<ofVec3f> &normals,
+					ColorNormalPointCloud &cloud)
 {
-	const size_t num_point = mesh.getNumVertices();
+	const size_t num_point = points.size();
 
 	cloud->width = num_point;
 	cloud->height = 1;
@@ -112,9 +114,9 @@ inline void convert(const ofMesh& mesh, ColorNormalPointCloud& cloud)
 	for (int i = 0; i < num_point; i++)
 	{
 		ColorNormalPointType &p = cloud->points[i];
-		const ofVec3f &o = mesh.getVerticesPointer()[i];
-		const ofFloatColor &c = mesh.getColorsPointer()[i];
-		const ofVec3f &n = mesh.getNormalsPointer()[i];
+		const ofVec3f &o = points[i];
+		const ofFloatColor &c = colors[i];
+		const ofVec3f &n = normals[i];
 		p.x = o.x;
 		p.y = o.y;
 		p.z = o.z;
@@ -125,6 +127,27 @@ inline void convert(const ofMesh& mesh, ColorNormalPointCloud& cloud)
 		p.normal_y = n.y;
 		p.normal_z = n.z;
 	}
+}
+
+template <>
+inline void convert(const ofMesh& mesh, PointCloud& cloud)
+{
+	ofMesh &m = const_cast<ofMesh&>(mesh);
+	convert(m.getVertices(), cloud);
+}
+
+template <>
+inline void convert(const ofMesh& mesh, ColorPointCloud& cloud)
+{
+	ofMesh &m = const_cast<ofMesh&>(mesh);
+	convert(m.getVertices(), m.getColors(), cloud);
+}
+
+template <>
+inline void convert(const ofMesh& mesh, ColorNormalPointCloud& cloud)
+{
+	ofMesh &m = const_cast<ofMesh&>(mesh);
+	convert(m.getVertices(), m.getColors(), m.getNormals(), cloud);
 }
 
 inline ofMesh toOF(const PointCloud cloud)
@@ -146,6 +169,27 @@ inline ofMesh toOF(const ColorNormalPointCloud cloud)
 	ofMesh mesh;
 	convert(cloud, mesh);
 	return mesh;
+}
+
+inline PointCloud toPCL(const vector<ofVec3f> &points)
+{
+	PointCloud cloud(new PointCloud::value_type);
+	convert(points, cloud);
+	return cloud;
+}
+
+inline ColorPointCloud toPCL(const vector<ofVec3f> &points, const vector<ofFloatColor> &colors)
+{
+	ColorPointCloud cloud(new ColorPointCloud::value_type);
+	convert(points, colors, cloud);
+	return cloud;
+}
+
+inline ColorNormalPointCloud toPCL(const vector<ofVec3f> &points, const vector<ofFloatColor> &colors, const vector<ofVec3f> &normals)
+{
+	ColorNormalPointCloud cloud(new ColorNormalPointCloud::value_type);
+	convert(points, colors, normals, cloud);
+	return cloud;
 }
 
 template <class T>

@@ -1,1 +1,15 @@
+.svn
+.hg
+.cvs
+
+# osx
+*.app
+*.mode1v3
+*.pbxuser
 .DS_Store
+build
+xcuserdata
+DerivedData
+
+# ofxPCL
+deps

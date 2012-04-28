@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef nil
+#undef nil
+#endif
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 
@@ -20,5 +24,12 @@ typedef pcl::PointCloud<PointNormalType>::Ptr PointNormalPointCloud;
 	
 typedef pcl::PointXYZRGBNormal ColorNormalPointType;
 typedef pcl::PointCloud<ColorNormalPointType>::Ptr ColorNormalPointCloud;
+
+
+template <typename T>
+inline T New()
+{
+	return T(new pcl::PointCloud<typename T::value_type::PointType>());
+}
 
 }

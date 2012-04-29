@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ofMain.h"
 #include "Types.h"
 
 namespace ofxPCL
@@ -237,6 +238,12 @@ inline void convert(const ofPixels& color, const ofShortPixels& depth, ColorPoin
 	cloud->height = color.getHeight() / skip;
 	cloud->is_dense = false;
 	
+	cloud->sensor_origin_.setZero();
+	cloud->sensor_orientation_.w () = 0.0;
+	cloud->sensor_orientation_.x () = 1.0;
+	cloud->sensor_orientation_.y () = 0.0;
+	cloud->sensor_orientation_.z () = 0.0;
+
 	cloud->resize(cloud->width * cloud->height);
 	
 	const int bytesParPixel = color.getBytesPerPixel();
@@ -245,8 +252,11 @@ inline void convert(const ofPixels& color, const ofShortPixels& depth, ColorPoin
 	
 	const float ref_pix_size = 0.104200;
 	const float ref_distance = 1. / 120.0;
+	const float factor_base = ref_pix_size * ref_distance * 2.f;
 	
 	unsigned int depth_idx = 0;
+	
+	float bad_point = std::numeric_limits<float>::quiet_NaN();
 	
 	for (int y = 0; y < 480; y += skip)
 	{
@@ -261,12 +271,13 @@ inline void convert(const ofPixels& color, const ofShortPixels& depth, ColorPoin
 			
 			if (d == 0)
 			{
-				pp.x = pp.y = pp.z = NAN;
+				pp.x = pp.y = pp.z = bad_point;
 			}
 			else
 			{
-				pp.z = d;
-				const float factor = 2.f * ref_pix_size * pp.z * ref_distance;
+				// centimeter to meter
+				pp.z = d * 0.01;
+				const float factor = factor_base * pp.z;
 				
 				pp.x = (x - centerX) * factor;
 				pp.y = (y - centerY) * factor;
@@ -283,6 +294,8 @@ inline void convert(const ofPixels& color, const ofShortPixels& depth, ColorPoin
 		}
 	}
 }
+	
+void convert(const ofPixels& color, const ofShortPixels& depth, ColorNormalPointCloud &cloud, const int skip = 1);
 	
 template <>
 inline void convert(const ofMesh& mesh, PointCloud& cloud)

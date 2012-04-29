@@ -46,6 +46,7 @@
 #include <pcl/io/pcd_io.h>
 
 #include <pcl/surface/organized_fast_mesh.h>
+#include <pcl/features/integral_image_normal.h>
 
 namespace ofxPCL
 {
@@ -365,5 +366,23 @@ ofMesh gridProjection(const T &cloud_with_normals, float resolution = 1, int pad
 }
 
 ofMesh organizedFastMesh(const ofPixels& colorImage, const ofShortPixels& depthImage, const int skip = 4);
+
+template <typename T>
+void integralImageNormalEstimation(const T& cloud, NormalPointCloud& normals)
+{
+	assert(cloud->isOrganized());
+	
+	if (!normals)
+		normals = New<NormalPointCloud>();
+	
+	pcl::IntegralImageNormalEstimation<typename T::value_type::PointType, NormalType> ne;
+	
+	ne.setNormalEstimationMethod(pcl::IntegralImageNormalEstimation<typename T::value_type::PointType, NormalType>::AVERAGE_3D_GRADIENT);
+	
+	ne.setMaxDepthChangeFactor(10.0f);
+	ne.setNormalSmoothingSize(2.0f);
+	ne.setInputCloud(cloud);
+	ne.compute(*normals);
+}
 	
 }

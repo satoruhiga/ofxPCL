@@ -1,15 +1,25 @@
 #pragma once
 
 #include "ofMain.h"
+
 #include "Types.h"
+
+#include <pcl/common/io.h>
 
 namespace ofxPCL
 {
 
 template <typename T>
-T create()
+inline T New()
 {
-	return T(new typename T::value_type);
+	return T(new pcl::PointCloud<typename T::value_type::PointType>);
+}
+
+
+template <typename T1, typename T2>
+inline void copy(const T1& src, T2& dst)
+{
+	pcl::copyPointCloud(*src, *dst);
 }
 
 //
@@ -52,6 +62,25 @@ inline void convert(const ColorPointCloud& cloud, ofMesh& mesh)
 		mesh.setVertex(i, ofVec3f(p.x, p.y, p.z));
 	}
 }
+	
+template <>
+inline void convert(const PointNormalPointCloud& cloud, ofMesh& mesh)
+{
+	assert(cloud);
+	
+	float inv_byte = 1. / 255.;
+	const size_t num_point = cloud->points.size();
+	
+	if (mesh.getNumVertices() != num_point) mesh.getVertices().resize(num_point);
+	if (mesh.getNumNormals() != num_point) mesh.getNormals().resize(num_point);
+	
+	for (int i = 0; i < num_point; i++)
+	{
+		PointNormalType &p = cloud->points[i];
+		mesh.setNormal(i, ofVec3f(p.normal_x, p.normal_y, p.normal_z));
+		mesh.setVertex(i, ofVec3f(p.x, p.y, p.z));
+	}
+}	
 
 template <>
 inline void convert(const ColorNormalPointCloud& cloud, ofMesh& mesh)
@@ -276,7 +305,7 @@ inline void convert(const ofPixels& color, const ofShortPixels& depth, ColorPoin
 			else
 			{
 				// centimeter to meter
-				pp.z = d * 0.01;
+				pp.z = d * 0.001;
 				const float factor = factor_base * pp.z;
 				
 				pp.x = (x - centerX) * factor;

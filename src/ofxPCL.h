@@ -262,7 +262,7 @@ void movingLeastSquares(const T1 &cloud, T2 &output_cloud_with_normals, float se
 
 	pcl::PointCloud<typename T1::value_type::PointType> mls_points;
 	NormalPointCloud mls_normals(new NormalPointCloud::value_type);
-	pcl::MovingLeastSquares<ColorPointType, NormalType> mls;
+	pcl::MovingLeastSquares<T1::value_type::PointType, NormalType> mls;
 
 	KdTree<typename T1::value_type::PointType> kdtree(cloud);
 

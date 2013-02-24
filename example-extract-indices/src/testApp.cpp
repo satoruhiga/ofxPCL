@@ -9,7 +9,7 @@ void testApp::setup()
 	ofxPCL::PointCloud cloud(new ofxPCL::PointCloud::value_type);
 	vector<ofxPCL::PointCloud> clouds;
 	
-	ofxPCL::loadPointCloud(string("table_scene_lms400.pcd"), cloud);
+	cloud = ofxPCL::loadPointCloud(string("table_scene_lms400.pcd"));
 		
 	std::cerr << "PointCloud before filtering: " << cloud->width * cloud->height 
 	<< " data points (" << pcl::getFieldsList (*cloud) << ")." << endl;

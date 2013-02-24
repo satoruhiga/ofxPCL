@@ -10,7 +10,7 @@ void testApp::setup()
 	
 	ofxPCL::PointCloud cloud(new ofxPCL::PointCloud::value_type);
 	
-	ofxPCL::loadPointCloud(string("table_scene_lms400.pcd"), cloud);
+	cloud = ofxPCL::loadPointCloud(string("table_scene_lms400.pcd"));
 	
 	meshraw = ofxPCL::toOF(cloud);
 	

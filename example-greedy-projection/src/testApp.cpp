@@ -11,7 +11,7 @@ void testApp::setup()
 	ofxPCL::PointCloud cloud(new ofxPCL::PointCloud::value_type);
 	ofxPCL::PointNormalPointCloud cloud_with_normals(new ofxPCL::PointNormalPointCloud::value_type);
 	
-	ofxPCL::loadPointCloud("bun0.pcd", cloud);
+	cloud = ofxPCL::loadPointCloud("bun0.pcd");
 	
 	meshraw = ofxPCL::toOF(cloud);
 	

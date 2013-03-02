@@ -7,7 +7,12 @@
 *.mode1v3
 *.pbxuser
 .DS_Store
-build
-xcuserdata
-DerivedData
+build/
+xcuserdata/
+DerivedData/
+project.xcworkspace
 
+# vs2010
+ipch/
+obj/
+*.sdf

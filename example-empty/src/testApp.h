@@ -2,9 +2,10 @@
 
 #include "ofMain.h"
 
+#include "ofxPCL.h"
+
 class testApp : public ofBaseApp
 {
-
 public:
 	void setup();
 	void update();
@@ -19,5 +20,4 @@ public:
 	void windowResized(int w, int h);
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
-
 };

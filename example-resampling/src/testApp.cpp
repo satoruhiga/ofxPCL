@@ -11,7 +11,7 @@ void testApp::setup()
 	ofxPCL::PointCloud cloud(new ofxPCL::PointCloud::value_type);
 	ofxPCL::PointNormalPointCloud mls_points(new ofxPCL::PointNormalPointCloud::value_type);
 
-	cloud = ofxPCL::loadPointCloud("bun0.pcd");
+	cloud = ofxPCL::loadPointCloud<ofxPCL::PointCloud>("bun0.pcd");
 	
 	meshraw = ofxPCL::toOF(cloud);
 	
@@ -26,9 +26,22 @@ void testApp::update()
 	
 }
 
+void drawNormals(ofVboMesh &mesh)
+{
+	for (int i = 0; i < mesh.getNumVertices(); i++)
+	{
+		ofVec3f v = mesh.getVertex(i);
+		ofVec3f n = mesh.getNormal(i);
+		
+		ofLine(v, v + n * 0.01);
+	}
+}
+
 //--------------------------------------------------------------
 void testApp::draw()
 {
+	ofEnableAlphaBlending();
+	
 	ofBackground(0);
 	
 	cam.begin();
@@ -36,9 +49,14 @@ void testApp::draw()
 	glEnable(GL_DEPTH_TEST);
 	
 	if( dispRaw ) {
+		ofSetColor(255);
 		meshraw.drawVertices();
 	} else {
+		ofSetColor(255);
 		mesh.drawVertices();
+		
+		ofSetColor(255, 0, 0, 127);
+		drawNormals(mesh);
 	}
 	
 	cam.end();	

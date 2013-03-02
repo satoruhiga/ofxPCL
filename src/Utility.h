@@ -68,7 +68,6 @@ inline void convert(const PointNormalPointCloud& cloud, ofMesh& mesh)
 {
 	assert(cloud);
 	
-	float inv_byte = 1. / 255.;
 	const size_t num_point = cloud->points.size();
 	
 	if (mesh.getNumVertices() != num_point) mesh.getVertices().resize(num_point);
@@ -77,7 +76,7 @@ inline void convert(const PointNormalPointCloud& cloud, ofMesh& mesh)
 	for (int i = 0; i < num_point; i++)
 	{
 		PointNormalType &p = cloud->points[i];
-		mesh.setNormal(i, ofVec3f(p.normal_x, p.normal_y, p.normal_z));
+		mesh.setNormal(i, ofVec3f(-p.normal_x, -p.normal_y, -p.normal_z));
 		mesh.setVertex(i, ofVec3f(p.x, p.y, p.z));
 	}
 }	
@@ -348,6 +347,13 @@ inline void convert(const ofMesh& mesh, ColorNormalPointCloud& cloud)
 }
 
 inline ofMesh toOF(const PointCloud cloud)
+{
+	ofMesh mesh;
+	convert(cloud, mesh);
+	return mesh;
+}
+	
+inline ofMesh toOF(const PointNormalPointCloud cloud)
 {
 	ofMesh mesh;
 	convert(cloud, mesh);

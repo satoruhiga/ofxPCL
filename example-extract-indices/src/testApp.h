@@ -1,11 +1,8 @@
 #pragma once
 
-#define nil Boost_nil
-#define Nil Boost_Nil
 #include "ofMain.h"
+
 #include "ofxPCL.h"
-#undef Nil
-#undef nil
 
 class testApp : public ofBaseApp
 {

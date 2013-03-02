@@ -61,7 +61,7 @@ inline T loadPointCloud(string path)
 	path = ofToDataPath(path);
 
 	if (pcl::io::loadPCDFile<typename T::value_type::PointType>(path.c_str(), *cloud) == -1)
-		ofLogError("Couldn't read file: " + path);
+		ofLogError("ofxPCL:loadPointCloud") << "file not found: " << path;
 
 	return cloud;
 }
@@ -253,31 +253,23 @@ void movingLeastSquares(const T1 &cloud, T2 &output_cloud_with_normals, float se
 	
 	if (cloud->points.empty()) return;
 
-	boost::shared_ptr<vector<int> > indices(new vector<int>);
-	indices->resize(cloud->points.size());
-	for (size_t i = 0; i < indices->size(); ++i)
-	{
-		(*indices)[i] = i;
-	}
+	KdTree<typename T1::value_type::PointType> kdtree;
+	
+	pcl::MovingLeastSquares<
+		typename T1::value_type::PointType,
+		typename T2::value_type::PointType
+	> mls;
 
-	pcl::PointCloud<typename T1::value_type::PointType> mls_points;
-	NormalPointCloud mls_normals(new NormalPointCloud::value_type);
-	pcl::MovingLeastSquares<T1::value_type::PointType, NormalType> mls;
-
-	KdTree<typename T1::value_type::PointType> kdtree(cloud);
+	mls.setComputeNormals(true);
 
 	// Set parameters
 	mls.setInputCloud(cloud);
-	mls.setIndices(indices);
 	mls.setPolynomialFit(true);
 	mls.setSearchMethod(kdtree.kdtree);
 	mls.setSearchRadius(search_radius);
 
 	// Reconstruct
-	mls.setOutputNormals(mls_normals);
-	mls.reconstruct(mls_points);
-	
-	pcl::concatenateFields(mls_points, *mls_normals, *output_cloud_with_normals);
+	mls.process(*output_cloud_with_normals);
 }
 
 //

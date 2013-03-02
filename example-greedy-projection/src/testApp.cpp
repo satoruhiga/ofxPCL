@@ -11,7 +11,7 @@ void testApp::setup()
 	ofxPCL::PointCloud cloud(new ofxPCL::PointCloud::value_type);
 	ofxPCL::PointNormalPointCloud cloud_with_normals(new ofxPCL::PointNormalPointCloud::value_type);
 	
-	cloud = ofxPCL::loadPointCloud("bun0.pcd");
+	cloud = ofxPCL::loadPointCloud<ofxPCL::PointCloud>("bun0.pcd");
 	
 	meshraw = ofxPCL::toOF(cloud);
 	
@@ -32,7 +32,9 @@ void testApp::draw()
 	ofBackground(0);
 	
 	cam.begin();
+
 	ofScale(100, 100, 100);
+	
 	glEnable(GL_DEPTH_TEST);
 	
 	if( dispRaw ) {
@@ -41,7 +43,7 @@ void testApp::draw()
 		mesh.draw();
 	}
 	
-	cam.end();	
+	cam.end();
 }
 
 //--------------------------------------------------------------

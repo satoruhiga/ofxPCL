@@ -12,6 +12,7 @@ if len(sys.argv) != 2:
 	sys.exit(1)
 
 target_path = os.path.abspath(sys.argv[1])
+os.chdir(os.path.dirname(sys.argv[0]))
 
 if not os.path.exists(target_path):
 	print 'err: project dir not found'

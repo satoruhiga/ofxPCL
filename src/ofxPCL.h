@@ -227,8 +227,8 @@ inline void normalEstimation(const T1 &cloud, T2 &output_cloud_with_normals)
 	
 	if (cloud->points.empty()) return;
 
-	pcl::NormalEstimation<typename T1::value_type::PointType, NormalType> n;
-	NormalPointCloud normals(new typename NormalPointCloud::value_type);
+	pcl::NormalEstimation<typename T1::value_type::PointType, Normal> n;
+	PointNormalCloud normals(new typename PointNormalCloud::value_type);
 
 	KdTree<typename T1::value_type::PointType> kdtree(cloud);
 
@@ -357,22 +357,25 @@ ofMesh gridProjection(const T &cloud_with_normals, float resolution = 1, int pad
 	return mesh;
 }
 
-ofMesh organizedFastMesh(const ofPixels& colorImage, const ofShortPixels& depthImage, const int skip = 4);
+ofMesh organizedFastMesh(const ofShortPixels& depthImage, const int skip = 4, float scale = 0.001);
+ofMesh organizedFastMesh(const ofPixels& colorImage, const ofShortPixels& depthImage, const int skip = 4, float scale = 0.001);
 
 template <typename T>
-void integralImageNormalEstimation(const T& cloud, NormalPointCloud& normals)
+void integralImageNormalEstimation(const T& cloud, NormalCloud& normals)
 {
 	assert(cloud->isOrganized());
 	
 	if (!normals)
-		normals = New<NormalPointCloud>();
+		normals = New<NormalCloud>();
 	
-	pcl::IntegralImageNormalEstimation<typename T::value_type::PointType, NormalType> ne;
+	typedef typename T::value_type::PointType PointType;
 	
-	ne.setNormalEstimationMethod(pcl::IntegralImageNormalEstimation<typename T::value_type::PointType, NormalType>::AVERAGE_3D_GRADIENT);
+	pcl::IntegralImageNormalEstimation<PointType, Normal> ne;
+	
+	ne.setNormalEstimationMethod(pcl::IntegralImageNormalEstimation<PointType, pcl::Normal>::AVERAGE_3D_GRADIENT);
 	
 	ne.setMaxDepthChangeFactor(10.0f);
-	ne.setNormalSmoothingSize(2.0f);
+	ne.setNormalSmoothingSize(4.0f);
 	ne.setInputCloud(cloud);
 	ne.compute(*normals);
 }

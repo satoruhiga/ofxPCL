@@ -298,6 +298,7 @@ ofMesh triangulate(const T &cloud_with_normals, float search_radius = 30)
 	gp3.setMinimumAngle(ofDegToRad(10));
 	gp3.setMaximumAngle(ofDegToRad(180));
 	gp3.setNormalConsistency(false);
+    gp3.setConsistentVertexOrdering(true);
 
 	gp3.setInputCloud(cloud_with_normals);
 	gp3.setSearchMethod(kdtree.kdtree);

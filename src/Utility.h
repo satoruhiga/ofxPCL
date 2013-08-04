@@ -71,6 +71,27 @@ inline void convert(const PointXYZCloud& cloud, ofMesh& mesh)
 	
 	addIndex(cloud, mesh);
 }
+    
+    template <>
+    inline void convert(const PointXYZICloud& cloud, ofMesh& mesh)
+    {
+        assert(cloud);
+        
+        float inv_byte = 1. / 255.;
+        const size_t num_point = cloud->points.size();
+        
+        if (mesh.getNumVertices() != num_point) mesh.getVertices().resize(num_point);
+        if (mesh.getNumColors() != num_point) mesh.getColors().resize(num_point);
+        
+        for (int i = 0; i < num_point; i++)
+        {
+            PointXYZI &p = cloud->points[i];
+            mesh.setColor(i, ofFloatColor(p.intensity * inv_byte, p.intensity * inv_byte, p.intensity * inv_byte));
+            mesh.setVertex(i, ofVec3f(p.x, p.y, p.z));
+        }
+        
+        addIndex(cloud, mesh);
+    }
 
 template <>
 inline void convert(const PointXYZRGBCloud& cloud, ofMesh& mesh)
@@ -465,6 +486,13 @@ inline ofMesh toOF(const PointXYZCloud cloud)
 	ofMesh mesh;
 	convert(cloud, mesh);
 	return mesh;
+}
+    
+inline ofMesh toOF(const PointXYZICloud cloud)
+{
+    ofMesh mesh;
+    convert(cloud, mesh);
+    return mesh;
 }
 	
 inline ofMesh toOF(const PointNormalCloud cloud)

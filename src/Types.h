@@ -15,6 +15,9 @@ namespace ofxPCL
 
 	using pcl::PointXYZ;
 	typedef pcl::PointCloud<PointXYZ>::Ptr PointXYZCloud;
+	
+	using pcl::PointXYZI;
+	typedef pcl::PointCloud<PointXYZI>::Ptr PointXYZICloud;
 
 	using pcl::PointNormal;
 	typedef pcl::PointCloud<PointNormal>::Ptr PointNormalCloud;

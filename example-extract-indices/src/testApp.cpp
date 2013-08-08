@@ -3,13 +3,15 @@
 #include <iostream>
 #include "testApp.h"
 
+// testdata: http://svn.pointclouds.org/data/tutorials/table_scene_lms400.pcd
+
 //--------------------------------------------------------------
 void testApp::setup()
 {
-	ofxPCL::PointCloud cloud(new ofxPCL::PointCloud::value_type);
-	vector<ofxPCL::PointCloud> clouds;
+	ofxPCL::PointXYZCloud cloud(new ofxPCL::PointXYZCloud::value_type);
+	vector<ofxPCL::PointXYZCloud> clouds;
 	
-	cloud = ofxPCL::loadPointCloud<ofxPCL::PointCloud>("table_scene_lms400.pcd");
+	cloud = ofxPCL::loadPointCloud<ofxPCL::PointXYZCloud>("table_scene_lms400.pcd");
 		
 	std::cerr << "PointCloud before filtering: " << cloud->width * cloud->height 
 	<< " data points (" << pcl::getFieldsList (*cloud) << ")." << endl;

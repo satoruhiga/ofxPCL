@@ -3,14 +3,16 @@
 #include <iostream>
 #include "testApp.h"
 
+// testdata: http://svn.pointclouds.org/data/tutorials/table_scene_lms400.pcd
+
 //--------------------------------------------------------------
 void testApp::setup()
 {
 	dispRaw = false;
 	
-	ofxPCL::PointCloud cloud(new ofxPCL::PointCloud::value_type);
+	ofxPCL::PointXYZCloud cloud(new ofxPCL::PointXYZCloud::value_type);
 	
-	cloud = ofxPCL::loadPointCloud<ofxPCL::PointCloud>(string("table_scene_lms400.pcd"));
+	cloud = ofxPCL::loadPointCloud<ofxPCL::PointXYZCloud>(string("table_scene_lms400.pcd"));
 	
 	meshraw = ofxPCL::toOF(cloud);
 	

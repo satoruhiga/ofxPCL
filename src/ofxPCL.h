@@ -228,16 +228,16 @@ inline void normalEstimation(const T1 &cloud, T2 &output_cloud_with_normals)
 	if (cloud->points.empty()) return;
 
 	pcl::NormalEstimation<typename T1::value_type::PointType, Normal> n;
-	PointNormalCloud normals(new typename PointNormalCloud::value_type);
+	pcl::PointCloud<pcl::Normal> normals;
 
 	KdTree<typename T1::value_type::PointType> kdtree(cloud);
 
 	n.setInputCloud(cloud);
 	n.setSearchMethod(kdtree.kdtree);
 	n.setKSearch(20);
-	n.compute(*normals);
+	n.compute(normals);
 	
-	pcl::concatenateFields(*cloud, *normals, *output_cloud_with_normals);
+	pcl::concatenateFields(*cloud, normals, *output_cloud_with_normals);
 }
 
 //

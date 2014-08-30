@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ofMain.h"
 
 #ifdef nil
 #undef nil
@@ -48,6 +47,9 @@
 #include <pcl/surface/organized_fast_mesh.h>
 #include <pcl/features/integral_image_normal.h>
 
+#include "ofMain.h"
+
+
 namespace ofxPCL
 {
 
@@ -57,10 +59,10 @@ namespace ofxPCL
 template <typename T>
 inline T loadPointCloud(string path)
 {
-	T cloud(new typename T::value_type);
+	T cloud(new typename T::element_type);
 	path = ofToDataPath(path);
 
-	if (pcl::io::loadPCDFile<typename T::value_type::PointType>(path.c_str(), *cloud) == -1)
+	if (pcl::io::loadPCDFile<typename T::element_type::PointType>(path.c_str(), *cloud) == -1)
 		ofLogError("ofxPCL:loadPointCloud") << "file not found: " << path;
 
 	return cloud;
@@ -102,7 +104,7 @@ inline void threshold(T cloud, const char *dimension = "X", float min = 0, float
 	
 	if (cloud->points.empty()) return;
 
-	pcl::PassThrough<typename T::value_type::PointType> pass;
+	pcl::PassThrough<typename T::element_type::PointType> pass;
 	pass.setInputCloud(cloud);
 	pass.setFilterFieldName(dimension);
 	pass.setFilterLimits(min, max);
@@ -119,7 +121,7 @@ inline void downsample(T cloud, ofVec3f resolution = ofVec3f(1, 1, 1))
 	
 	if (cloud->points.empty()) return;
 
-	pcl::VoxelGrid<typename T::value_type::PointType> sor;
+	pcl::VoxelGrid<typename T::element_type::PointType> sor;
 	sor.setInputCloud(cloud);
 	sor.setLeafSize(resolution.x, resolution.y, resolution.z);
 	sor.filter(*cloud);
@@ -135,7 +137,7 @@ inline void statisticalOutlierRemoval(T cloud, int nr_k = 50, double std_mul = 1
 	
 	if (cloud->points.empty()) return;
 
-	pcl::StatisticalOutlierRemoval<typename T::value_type::PointType> sor;
+	pcl::StatisticalOutlierRemoval<typename T::element_type::PointType> sor;
 	sor.setInputCloud(cloud);
 	sor.setMeanK(nr_k);
 	sor.setStddevMulThresh(std_mul);
@@ -149,7 +151,7 @@ inline void radiusOutlierRemoval(T cloud, double radius, int num_min_points)
 	
 	if (cloud->points.empty()) return;
 
-	pcl::RadiusOutlierRemoval<typename T::value_type::PointType> outrem;
+	pcl::RadiusOutlierRemoval<typename T::element_type::PointType> outrem;
 	outrem.setInputCloud(cloud);
 	outrem.setRadiusSearch(radius);
 	outrem.setMinNeighborsInRadius(num_min_points);
@@ -169,7 +171,7 @@ inline vector<T> segmentation(T cloud, const pcl::SacModel model_type = pcl::SAC
 	pcl::ModelCoefficients::Ptr coefficients(new pcl::ModelCoefficients());
 	pcl::PointIndices::Ptr inliers(new pcl::PointIndices());
 
-	pcl::SACSegmentation<typename T::value_type::PointType> seg;
+	pcl::SACSegmentation<typename T::element_type::PointType> seg;
 	seg.setOptimizeCoefficients(false);
 
 	seg.setModelType(model_type);
@@ -177,10 +179,10 @@ inline vector<T> segmentation(T cloud, const pcl::SacModel model_type = pcl::SAC
 	seg.setDistanceThreshold(distance_threshold);
 	seg.setMaxIterations(500);
 
-	T temp(new typename T::value_type(*cloud));
+	T temp(new typename T::element_type(*cloud));
 	const size_t original_szie = temp->points.size();
 
-	pcl::ExtractIndices<typename T::value_type::PointType> extract;
+	pcl::ExtractIndices<typename T::element_type::PointType> extract;
 	vector<T> result;
 
 	int segment_count = 0;
@@ -195,7 +197,7 @@ inline vector<T> segmentation(T cloud, const pcl::SacModel model_type = pcl::SAC
 		if (inliers->indices.size() < min_points_limit)
 			break;
 
-		T filterd_point_cloud(new typename T::value_type);
+		T filterd_point_cloud(new typename T::element_type);
 
 		extract.setInputCloud(temp);
 		extract.setIndices(inliers);
@@ -227,10 +229,10 @@ inline void normalEstimation(const T1 &cloud, T2 &output_cloud_with_normals)
 	
 	if (cloud->points.empty()) return;
 
-	pcl::NormalEstimation<typename T1::value_type::PointType, NormalType> n;
-	NormalPointCloud normals(new typename NormalPointCloud::value_type);
+	pcl::NormalEstimation<typename T1::element_type::PointType, NormalType> n;
+	NormalPointCloud normals(new typename NormalPointCloud::element_type);
 
-	KdTree<typename T1::value_type::PointType> kdtree(cloud);
+	KdTree<typename T1::element_type::PointType> kdtree(cloud);
 
 	n.setInputCloud(cloud);
 	n.setSearchMethod(kdtree.kdtree);
@@ -253,11 +255,11 @@ void movingLeastSquares(const T1 &cloud, T2 &output_cloud_with_normals, float se
 	
 	if (cloud->points.empty()) return;
 
-	KdTree<typename T1::value_type::PointType> kdtree;
+	KdTree<typename T1::element_type::PointType> kdtree;
 	
 	pcl::MovingLeastSquares<
-		typename T1::value_type::PointType,
-		typename T2::value_type::PointType
+		typename T1::element_type::PointType,
+		typename T2::element_type::PointType
 	> mls;
 
 	mls.setComputeNormals(true);
@@ -284,9 +286,9 @@ ofMesh triangulate(const T &cloud_with_normals, float search_radius = 30)
 	
 	if (cloud_with_normals->points.empty()) return mesh;
 	
-	KdTree<typename T::value_type::PointType> kdtree(cloud_with_normals);
+	KdTree<typename T::element_type::PointType> kdtree(cloud_with_normals);
 
-	typename pcl::GreedyProjectionTriangulation<typename T::value_type::PointType> gp3;
+	typename pcl::GreedyProjectionTriangulation<typename T::element_type::PointType> gp3;
 	pcl::PolygonMesh triangles;
 
 	// Set the maximum distance between connected points (maximum edge length)
@@ -326,10 +328,10 @@ ofMesh gridProjection(const T &cloud_with_normals, float resolution = 1, int pad
 
 	if (cloud_with_normals->points.empty()) return mesh;
 
-	typename pcl::KdTreeFLANN<typename T::value_type::PointType>::Ptr tree(new pcl::KdTreeFLANN<typename T::value_type::PointType>);
+	typename pcl::KdTreeFLANN<typename T::element_type::PointType>::Ptr tree(new pcl::KdTreeFLANN<typename T::element_type::PointType>);
 	tree->setInputCloud(cloud_with_normals);
 
-	pcl::GridProjection<typename T::value_type::PointType> gp;
+	pcl::GridProjection<typename T::element_type::PointType> gp;
 	pcl::PolygonMesh triangles;
 
 	gp.setResolution(resolution);
@@ -367,9 +369,9 @@ void integralImageNormalEstimation(const T& cloud, NormalPointCloud& normals)
 	if (!normals)
 		normals = New<NormalPointCloud>();
 	
-	pcl::IntegralImageNormalEstimation<typename T::value_type::PointType, NormalType> ne;
+	pcl::IntegralImageNormalEstimation<typename T::element_type::PointType, NormalType> ne;
 	
-	ne.setNormalEstimationMethod(pcl::IntegralImageNormalEstimation<typename T::value_type::PointType, NormalType>::AVERAGE_3D_GRADIENT);
+	ne.setNormalEstimationMethod(pcl::IntegralImageNormalEstimation<typename T::element_type::PointType, NormalType>::AVERAGE_3D_GRADIENT);
 	
 	ne.setMaxDepthChangeFactor(10.0f);
 	ne.setNormalSmoothingSize(2.0f);

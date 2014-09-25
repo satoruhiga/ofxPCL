@@ -2,7 +2,7 @@
 
 1. Get dependencies (96.9 MB) and extract them to ofxPCL folder.
 
-		$ curl -O http://structor.jp/dist/ofxpcl_16_libs.zip
+		$ curl -O -L http://cl.ly/1D1Q3G072q3D/download/ofxpcl_16_libs.zip
 		$ unzip ofxpcl_16_libs.zip
 
 
